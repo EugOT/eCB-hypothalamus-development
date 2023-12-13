@@ -1,0 +1,1588 @@
+---
+title: "eCB expression analysis of Hypothalamus development with focus on PVN"
+author: "Evgenii O. Tretiakov"
+date: "`r Sys.Date()`"
+format:
+  html:
+    toc: true
+    df-print: paged
+    code-fold: true
+    fig-width: 9
+    fig-height: 12
+    fig-format: retina
+    fig-responsive: true
+    fig-dpi: 300
+  pdf:
+    colorlinks: true
+    fontsize: 12pt
+execute:
+  keep-md: true
+  echo: true
+  error: false
+  message: false
+  warning: false
+  debug: false
+knitr:
+  opts_chunk:
+    autodep: true
+    fig.align: center
+    fig.retina: 2
+    fig.width: 14
+    fig.height: 12
+---
+
+```{r}
+#| label: setup
+#| include: false
+DOCNAME <- "endo-cb"
+NOW <- Sys.time()
+
+# Time chunks during knitting
+knitr::knit_hooks$set(timeit = function(before) {
+  if (before) {
+    print(paste("Start:", Sys.time()))
+    NOW <<- Sys.time()
+  } else {
+    print(paste("Stop:", Sys.time()))
+    print(Sys.time() - NOW)
+  }
+})
+
+knitr::knit_hooks$set(debug = function(before, options, envir) {
+  if (!before) {
+    message(
+      paste(names(envir), as.list(envir),
+        sep = " = ", collapse = "\n"
+      )
+    )
+  }
+})
+
+knitr::opts_chunk$set(
+  cache          = FALSE,
+  dev            = c("png", "pdf"),
+  timeit         = TRUE
+)
+
+Sys.setenv(RETICULATE_PYTHON = "/opt/python/3.8.8/bin/python")
+reticulate::use_condaenv("/opt/python/3.8.8/bin/python")
+```
+
+## Setup parameters
+
+```{r}
+#| label: libraries
+#| cache: false
+# Load tidyverse infrastructure packages
+suppressPackageStartupMessages({
+  library(future)
+  library(here)
+  library(tidyverse)
+  library(magrittr)
+  library(stringr)
+  library(skimr)
+  library(RColorBrewer)
+  library(viridis)
+})
+
+
+# Load packages for scRNA-seq analysis and visualisation
+suppressPackageStartupMessages({
+  library(UpSetR)
+  library(ggplot2)
+  library(cowplot)
+  library(patchwork)
+  library(ggstatsplot)
+  library(anndata)
+  library(sceasy)
+  library(Seurat)
+  library(SeuratDisk)
+  library(SeuratWrappers)
+  library(scCustomize)
+})
+
+sc <- import("scanpy", convert = FALSE)
+```
+
+### Set paths
+
+```{r}
+#| label: paths
+src_dir <- here("code")
+data_dir <- here("data")
+output_dir <- here("output")
+plots_dir <- here(output_dir, "figures/")
+tables_dir <- here(output_dir, "tables/")
+```
+
+### Load helper functions and gene-sets
+
+```{r}
+#| label: source
+#| cache: false
+source(here(src_dir, "genes.R"))
+source(here(src_dir, "functions.R"))
+```
+
+### Set fixed variables
+
+```{r}
+#| label: params-computation
+#| cache: false
+# set seed
+reseed <- 42
+set.seed(seed = reseed)
+
+# Parameters for parallel execution
+n_cores <- 8
+plan("multisession", workers = n_cores)
+options(
+  future.globals.maxSize = 100000 * 1024^2,
+  future.rng.onMisuse = "ignore"
+)
+plan()
+
+
+# ggplot2 theme
+theme_set(ggmin::theme_powerpoint())
+```
+
+```{r}
+#| label: params
+bioproject <- "PRJNA547712"
+project <- "kim2020_Hypoth-dev"
+cb_fpr <- 0.001
+low_cutoff_gene <- 500
+high_cutoff_gene <- NULL
+high_cutoff_gene <- 5000
+low_cutoff_umis <- NULL
+low_cutoff_umis <- -Inf
+high_cutoff_umis <- 25000
+high_cutoff_pc_mt <- 15
+high_cutoff_pc_ribo <- 20
+high_cutoff_pc_hb <- 0.1
+high_cutoff_doublet_score <- 0.33
+high_cutoff_complexity <- 0.85
+connectivity_model <- "min_tree"
+k <- 10
+metric <- "euclidean"
+signature <- 100
+```
+
+## Load Kim DW et al 2020
+
+```{r}
+#| label: load-data
+#| cache: false
+anndata <- sc$read(here(
+  "kim2020_combined.h5ad"
+))
+```
+
+### Convert adata object to R AnnDataR6 object.
+```{r}
+#| label: convert-to-r
+adata <- py_to_r(anndata)
+class(adata)
+class(adata$X)
+adata
+```
+
+```{r}
+#| label: convert-to-seurat
+srt_path <- here(
+  "data",
+  sprintf("%s-whole_dataset-simple.h5Seurat", bioproject)
+)
+
+expr_mtx <- t(as.matrix(adata$X))
+colnames(expr_mtx) <- rownames(adata$X)
+rownames(expr_mtx) <- adata$var$features
+srt <- CreateSeuratObject(
+  expr_mtx,
+  assay = "RNA",
+  project = "kim2020_Hypoth_dev",
+  meta.data = as.data.frame(adata$obs)
+)
+
+X_umap <- adata$obs |>
+  select(X, Y) |>
+  as.matrix()
+colnames(X_umap) <- c("UMAP_1", "UMAP_2")
+rownames(X_umap) <- colnames(expr_mtx)
+srt[["umap"]] <- CreateDimReducObject(embeddings = X_umap, key = "umap_", assay = DefaultAssay(srt))
+
+Idents(srt) <- "age"
+srt <- Store_Palette_Seurat(seurat_object = srt, palette = rev(brewer.pal(n = 11, name = "Spectral")), palette_name = "expr_Colour_Pal")
+```
+
+## Load Romanov et al 2020
+
+```{r}
+#| label: load-seurat
+print(srt)
+rar2020.srt.pub <- readRDS("/data/1_heteroAstrocytes/PRJNA548917/old/oldCCA_nae_srt.rds")
+rar2020.srt.pub <- UpdateSeuratObject(rar2020.srt.pub)
+Idents(rar2020.srt.pub) <-
+  factor(rar2020.srt.pub$wtree,
+    ordered = TRUE
+  )
+
+# Consistent colours and clusters names
+colours_wtree <- setNames(read_lines(here(data_dir, "colours_wtree.tsv")), 1:45)
+
+rar2020.srt.pub$age <-
+  Cells(rar2020.srt.pub) |>
+  str_split(pattern = ":", simplify = T) %>%
+  .[, 1] %>%
+  str_split_fixed(pattern = "_", n = 3) %>%
+  .[, 3]
+print(rar2020.srt.pub)
+glimpse(rar2020.srt.pub@meta.data)
+table(Idents(rar2020.srt.pub))
+
+rar2020.srt.pub %<>% RenameIdents(object = ., `43` = "mneOXY")
+rar2020.srt.pub %<>% RenameIdents(object = ., `26` = "mneVAS")
+rar2020.srt.pub %<>% RenameIdents(object = ., `31` = "pneSS")
+rar2020.srt.pub %<>% RenameIdents(object = ., `24` = "pneCRH")
+rar2020.srt.pub %<>% RenameIdents(object = ., `15` = "pneTRH")
+```
+
+```{r}
+#| label: n-cells-by-age-all
+rar2020.srt.pub$stage <-
+  rar2020.srt.pub$age %>%
+  forcats::fct_collapse(
+    Embryonic = c("E15", "E17"),
+    Neonatal = c("P0", "P2", "3P2"),
+    Pubertal = c("1P10", "P10"),
+    Adult = c("P23")
+  )
+rar2020.srt.pub$stage %<>% factor(levels = c("Embryonic", "Neonatal", "Pubertal", "Adult"), ordered = TRUE)
+rar2020.srt.pub$stage %>% forcats::fct_count()
+```
+
+
+```{r}
+#| label: subset-pvn
+rar2020.srt.pvn <-
+  subset(
+    x = rar2020.srt.pub,
+    idents = c(
+      "mneOXY", "mneVAS",
+      "pneSS", "pneCRH", "pneTRH"
+    ),
+    invert = FALSE
+  )
+```
+
+```{r}
+#| label: correct-age-labels
+rar2020.srt.pub$age <-
+  plyr::mapvalues(
+    x = rar2020.srt.pub$age,
+    from = c("E15", "E17", "P0", "P2", "3P2", "1P10", "P10", "P23"),
+    to = c("E15", "E17", "P00", "P02", "P02", "P10", "P10", "P23")
+  )
+
+rar2020.srt.pvn$age <-
+  plyr::mapvalues(
+    x = rar2020.srt.pvn$age,
+    from = c("E15", "E17", "P0", "P2", "3P2", "1P10", "P10", "P23"),
+    to = c("E15", "E17", "P00", "P02", "P02", "P10", "P10", "P23")
+  )
+
+rar2020.srt.pub$age %>% forcats::fct_count()
+```
+
+
+```{r}
+#| label: plot-feature-cb-romanov2020
+#| fig-width: 18
+#| fig-height: 36
+FeaturePlot(
+  rar2020.srt.pub,
+  features = c(neurotrans, cnbn),
+  label = F,
+  blend = F,
+  order = TRUE,
+  pt.size = 1.2,
+  raster.dpi = c(1024, 1024),
+  alpha = 0.5,
+  split.by = "age"
+)
+```
+
+```{r}
+#| label: e-cb-representation
+sbs_mtx <-
+  rar2020.srt.pub@assays$RNA@data %>%
+  as.data.frame() %>%
+  t()
+rownames(sbs_mtx) <- colnames(rar2020.srt.pub)
+
+# Filter features
+filt_low_genes <-
+  colSums(sbs_mtx) %>%
+  .[. > quantile(., 0.4)] %>%
+  names()
+sbs_mtx %<>% .[, filt_low_genes]
+
+min_filt_vector2 <-
+  sbs_mtx %>%
+  as_tibble() %>%
+  select(all_of(filt_low_genes)) %>%
+  summarise(across(.fns = ~ quantile(.x, .005))) %>%
+  as.list() %>%
+  map(as.double) %>%
+  simplify() %>%
+  .[filt_low_genes]
+
+# Prepare table of intersection sets analysis
+content_sbs_mtx <-
+  (sbs_mtx > min_filt_vector2) %>%
+  as_tibble() %>%
+  mutate_all(as.numeric)
+
+```
+
+```{r}
+#| label: upset-group-e-cb-all-romanov2020
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(content_sbs_mtx),
+  order.by = "freq",
+  group.by = "sets",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+```{r}
+#| label: upset-not-grouped-e-cb-all-romanov2020
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(content_sbs_mtx),
+  order.by = "freq",
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 15,
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  nintersects = 20,
+  empty.intersections = NULL
+)
+```
+
+```{r}
+#| label: merge-metadata-and-expression
+sbs_mtx_full <- content_sbs_mtx |>
+  select(any_of(c(neurotrans, cnbn))) |>
+  dplyr::bind_cols(rar2020.srt.pub@meta.data)
+
+sbs_mtx_full |> glimpse()
+```
+
+## Prepare query mapping between datasets
+
+```{r}
+#| label: norm-scale-matrix
+srt <- NormalizeData(srt)
+srt <- FindVariableFeatures(srt, selection.method = "vst", nfeatures = 3000)
+# all.genes <- rownames(srt)
+# srt <- ScaleData(srt, features = all.genes)
+srt <- ScaleData(srt)
+```
+
+```{r}
+#| label: transfer-annotations
+hypoth.anchors <- FindTransferAnchors(
+  reference = rar2020.srt.pub, query = srt, dims = 1:30,
+  reference.reduction = "pca"
+)
+predictions <- TransferData(anchorset = hypoth.anchors, refdata = rar2020.srt.pub$wtree, dims = 1:30)
+srt <- AddMetaData(srt, metadata = predictions)
+table(srt$predicted.id)
+```
+
+```{r}
+#| label: transfer-umap
+rar2020.srt.pub <- RunUMAP(rar2020.srt.pub, dims = 1:30, reduction = "pca", return.model = TRUE)
+srt <- IntegrateEmbeddings(
+  anchorset = hypoth.anchors, reference = rar2020.srt.pub, query = srt,
+  new.reduction.name = "ref.pca"
+)
+srt <- ProjectUMAP(
+  query = srt, query.reduction = "ref.pca", reference = rar2020.srt.pub,
+  reference.reduction = "pca", reduction.model = "umap"
+)
+Idents(srt) <- srt$Cluster
+```
+
+```{r}
+#| label: plot-reference-umap-transfered
+p1 <- DimPlot(rar2020.srt.pub,
+  reduction = "umap", group.by = "wtree", label = TRUE, label.size = 3,
+  repel = TRUE
+) + NoLegend() + ggtitle("Reference annotations")
+p2 <- DimPlot(srt,
+  reduction = "ref.umap", group.by = "Cluster", label = TRUE,
+  label.size = 3, repel = TRUE
+) + NoLegend() + ggtitle("Query transferred Embedding")
+p1 + p2
+```
+
+```{r}
+#| label: plot-reference-umap-transfered-genes
+#| fig-width: 18
+#| fig-height: 6
+p1 <- FeaturePlot_scCustom(rar2020.srt.pub,
+  reduction = "umap", features = c("Oxt", "Avp", "Sst", "Crh", "Trh"), label = TRUE, label.size = 2,
+  repel = TRUE, num_columns = 5
+) * NoLegend()
+p2 <- FeaturePlot_scCustom(srt,
+  reduction = "ref.umap", features = c("Oxt", "Avp", "Sst", "Crh", "Trh"), label = TRUE, label.size = 2,
+  repel = TRUE, num_columns = 5
+) * NoLegend()
+(p1 / p2)
+```
+
+```{r}
+#| label: ref-embedding-split-age
+#| fig-height: 18
+#| fig-width: 21
+DimPlot_scCustom(
+  srt,
+  reduction = "ref.umap",
+  split.by = "Age",
+  repel = TRUE,
+  num_columns = 4
+)
+```
+
+```{r}
+#| label: ref-embedding-split-stage
+#| fig-height: 8
+#| fig-width: 21
+srt$stage <-
+  srt$Age %>%
+  forcats::fct_collapse(
+    Embryonic = c(
+      "E10", "E11", "E12", "E13",
+      "E14", "E15", "E16", "E18"
+    ),
+    Neonatal = c("P4", "P8"),
+    Pubertal = c("P14"),
+    Adult = c("P45")
+  )
+srt$stage %<>% factor(levels = c("Embryonic", "Neonatal", "Pubertal", "Adult"), ordered = TRUE)
+DimPlot_scCustom(
+  srt,
+  reduction = "ref.umap",
+  split.by = "stage",
+  repel = TRUE,
+  num_columns = 4
+)
+```
+
+```{r}
+#| label: ref-embedding-selection-of-pvn-neurons
+if (!file.exists(here(data_dir, "kim2020_pvn_neurons.txt"))) {
+  plot <- DimPlot(object = srt, reduction = "ref.umap")
+  srt <- CellSelector(plot = plot, object = srt, ident = "SelectedCells")
+
+  selected_cells <- Cells(subset(srt, idents = "SelectedCells"))
+  write_lines(selected_cells, file = here(data_dir, "kim2020_pvn_neurons.txt"))
+}
+selected_cells <- read_lines(here(data_dir, "kim2020_pvn_neurons.txt"))
+srt <- subset(srt, cells = selected_cells)
+
+srt@meta.data <- srt@meta.data |> rename(wtree = predicted.id, age = Age)
+
+srt
+```
+
+## Intersection sets analysis
+
+### PVN Neurons from Kim et al. 2020, Nature Communications
+
+```{r}
+#| label: plot-reference-umap-transfered-genes-split-by-stages
+#| fig-height: 21
+#| fig-width: 18
+FeaturePlot_scCustom(srt, reduction = "ref.umap", features = c("Oxt", "Avp", "Sst", "Crh", "Trh"), split.by = "stage", label = F, num_columns = 4) * NoLegend()
+```
+
+```{r}
+#| label: plot-reference-umap-feature-cb-split-by-stages
+#| fig-width: 18
+#| fig-height: 36
+FeaturePlot_scCustom(srt, reduction = "ref.umap", features = c(cnbn), split.by = "stage", label = F, num_columns = 4) * NoLegend()
+```
+
+```{r}
+#| label: e-cb-representation-kim2020-pvn
+sbs_mtx <-
+  srt@assays$RNA@layers$data %>%
+  as.data.frame() %>%
+  t()
+
+rownames(sbs_mtx) <- colnames(srt)
+colnames(sbs_mtx) <- rownames(srt)
+
+# Filter features
+filt_low_genes <-
+  colSums(sbs_mtx) %>%
+  .[. > quantile(., 0.4)] %>%
+  names()
+sbs_mtx %<>% .[, filt_low_genes]
+
+min_filt_vector2 <-
+  sbs_mtx %>%
+  as_tibble() %>%
+  select(all_of(filt_low_genes)) %>%
+  summarise(across(.fns = ~ quantile(.x, .005))) %>%
+  as.list() %>%
+  map(as.double) %>%
+  simplify() %>%
+  .[filt_low_genes]
+
+# Prepare table of intersection sets analysis
+content_sbs_mtx_kim <-
+  (sbs_mtx > min_filt_vector2) %>%
+  as_tibble() %>%
+  mutate_all(as.numeric) %>%
+  bind_cols(
+    srt@meta.data |> select(wtree, age, stage)
+  )
+
+```
+
+#### All
+
+```{r}
+#| label: upset-group-e-cb-kim2020-pvn
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(content_sbs_mtx_kim),
+  order.by = "freq",
+  group.by = "sets",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx_kim)],
+  empty.intersections = NULL
+)
+```
+
+#### Embryonic
+
+```{r}
+#| label: upset-group-e-cb-kim2020-pvn-Embryonic
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx_kim |>
+      filter(stage == "Embryonic") |>
+      select(
+        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_kim)]
+      )
+  ),
+  order.by = "freq",
+  group.by = "sets",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx_kim)],
+  empty.intersections = F
+)
+```
+
+#### Neonatal
+
+```{r}
+#| label: upset-group-e-cb-kim2020-pvn-Neonatal
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx_kim |>
+      filter(stage == "Neonatal") |>
+      select(
+        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_kim)]
+      )
+  ),
+  order.by = "freq",
+  group.by = "sets",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx_kim)],
+  empty.intersections = F
+)
+```
+
+#### Pubertal
+
+```{r}
+#| label: upset-group-e-cb-kim2020-pvn-Pubertal
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx_kim |>
+      filter(stage == "Pubertal") |>
+      select(
+        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_kim)]
+      )
+  ),
+  order.by = "freq",
+  group.by = "sets",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx_kim)],
+  empty.intersections = NULL
+)
+```
+
+#### Adult
+
+```{r}
+#| label: upset-group-e-cb-kim2020-pvn-Adult
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx_kim |>
+      filter(stage == "Adult") |>
+      select(
+        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_kim)]
+      )
+  ),
+  order.by = "freq",
+  group.by = "sets",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx_kim)],
+  empty.intersections = F
+)
+```
+
+### PVN Neurons from Romanov et al. 2020, Nature
+
+```{r}
+#| label: plot-romanov2020-pvn-feature-cb-split-by-stages
+#| fig-width: 18
+#| fig-height: 36
+FeaturePlot_scCustom(rar2020.srt.pvn, reduction = "umap", features = c(cnbn), split.by = "stage", label = F, num_columns = 4) * NoLegend()
+```
+
+```{r}
+#| label: plot-feature-cb-romanov2020-pvn
+#| fig-width: 18
+#| fig-height: 36
+FeaturePlot(
+  rar2020.srt.pvn,
+  features = c(cnbn),
+  label = F,
+  blend = F,
+  order = TRUE,
+  pt.size = 1.2,
+  raster.dpi = c(1024, 1024),
+  alpha = 0.5,
+  split.by = "age"
+)
+```
+
+```{r}
+#| label: e-cb-representation-romanov2020-pvn
+sbs_mtx <-
+  rar2020.srt.pvn@assays$RNA@data %>%
+  as.data.frame() %>%
+  t()
+
+# Filter features
+filt_low_genes <-
+  colSums(sbs_mtx) %>%
+  .[. > quantile(., 0.4)] %>%
+  names()
+sbs_mtx %<>% .[, filt_low_genes]
+
+min_filt_vector2 <-
+  sbs_mtx %>%
+  as_tibble() %>%
+  select(all_of(filt_low_genes)) %>%
+  summarise(across(.fns = ~ quantile(.x, .005))) %>%
+  as.list() %>%
+  map(as.double) %>%
+  simplify() %>%
+  .[filt_low_genes]
+
+# Prepare table of intersection sets analysis
+content_sbs_mtx_romanov <-
+  (sbs_mtx > min_filt_vector2) %>%
+  as_tibble() %>%
+  mutate_all(as.numeric) %>%
+  bind_cols(
+    rar2020.srt.pvn@meta.data |> select(wtree, age, stage)
+  )
+
+```
+
+#### All
+
+```{r}
+#| label: upset-group-e-cb-romanov2020-pvn
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(content_sbs_mtx_romanov),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx_romanov)],
+  empty.intersections = NULL
+)
+```
+
+#### Embryonic
+
+```{r}
+#| label: upset-group-e-cb-romanov2020-pvn-Embryonic
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx_romanov |>
+      filter(stage == "Embryonic") |>
+      select(
+        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_romanov)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx_romanov)],
+  empty.intersections = NULL
+)
+```
+
+#### Neonatal
+
+```{r}
+#| label: upset-group-e-cb-romanov2020-pvn-Neonatal
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx_romanov |>
+      filter(stage == "Neonatal") |>
+      select(
+        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_romanov)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx_romanov)],
+  empty.intersections = NULL
+)
+```
+
+#### Pubertal
+
+```{r}
+#| label: upset-group-e-cb-romanov2020-pvn-Pubertal
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx_romanov |>
+      filter(stage == "Pubertal") |>
+      select(
+        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_romanov)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx_romanov)],
+  empty.intersections = NULL
+)
+```
+
+#### Adult
+
+```{r}
+#| label: upset-group-e-cb-romanov2020-pvn-Adult
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx_romanov |>
+      filter(stage == "Adult") |>
+      select(
+        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_romanov)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx_romanov)],
+  empty.intersections = NULL
+)
+```
+
+### PVN Neurons from both datasets joined
+
+```{r}
+#| label: e-cb-representation-pvn
+# Prepare table of intersection sets analysis
+to_select <-
+  c(cnbn, "Oxt", "Crh", "Trh", "Avp", "Sst", "wtree", "age", "stage") %>%
+  .[. %in% colnames(content_sbs_mtx_kim)] %>%
+  .[. %in% colnames(content_sbs_mtx_romanov)]
+
+content_sbs_mtx <-
+  bind_rows(
+    content_sbs_mtx_kim |> select(all_of(to_select)),
+    content_sbs_mtx_romanov |> select(all_of(to_select))
+  )
+
+```
+
+#### All
+
+```{r}
+#| label: upset-group-e-cb-pvn
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(content_sbs_mtx),
+  order.by = "freq",
+  group.by = "sets",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+#### Embryonic
+
+```{r}
+#| label: upset-group-e-cb-pvn-Embryonic
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Embryonic") |>
+      select(
+        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+```{r}
+#| label: upset-group-e-cb-pvn-Embryonic-f2
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Embryonic") |>
+      select(
+        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+```{r}
+#| label: upset-group-e-cb-pvn-Embryonic-f3
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Embryonic") |>
+      select(
+        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+```{r}
+#| label: upset-group-e-cb-pvn-Embryonic-f4
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Embryonic") |>
+      select(
+        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+#### Neonatal
+
+```{r}
+#| label: upset-group-e-cb-pvn-Neonatal
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Neonatal") |>
+      select(
+        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+```{r}
+#| label: upset-group-e-cb-pvn-Neonatal-f2
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Neonatal") |>
+      select(
+        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+```{r}
+#| label: upset-group-e-cb-pvn-Neonatal-f3
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Neonatal") |>
+      select(
+        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+```{r}
+#| label: upset-group-e-cb-pvn-Neonatal-f4
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Neonatal") |>
+      select(
+        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+#### Pubertal
+
+```{r}
+#| label: upset-group-e-cb-pvn-Pubertal
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Pubertal") |>
+      select(
+        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+```{r}
+#| label: upset-group-e-cb-pvn-Pubertal-f2
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Pubertal") |>
+      select(
+        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+```{r}
+#| label: upset-group-e-cb-pvn-Pubertal-f3
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Pubertal") |>
+      select(
+        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+```{r}
+#| label: upset-group-e-cb-pvn-Pubertal-f4
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Pubertal") |>
+      select(
+        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+#### Adult
+
+```{r}
+#| label: upset-group-e-cb-pvn-Adult
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Adult") |>
+      select(
+        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c(cnbn) %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+```{r}
+#| label: upset-group-e-cb-pvn-Adult-f2
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Adult") |>
+      select(
+        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+```{r}
+#| label: upset-group-e-cb-pvn-Adult-f3
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Adult") |>
+      select(
+        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+```{r}
+#| label: upset-group-e-cb-pvn-Adult-f4
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Adult") |>
+      select(
+        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+### Contingency tables
+
+```{r}
+#| label: n-cells-by-age-pvn
+rar2020.srt.pvn$age %>% forcats::fct_count()
+
+rar2020.srt.pvn$stage %>% forcats::fct_count()
+
+srt$age %>% forcats::fct_count()
+
+srt$stage %>% forcats::fct_count()
+```
+
+## Integration of PVN neurons from both datasets
+
+```{r}
+#| label: prepare-lists-for-integration
+#| echo: false
+srt.pvn.list <-
+  c(
+    SplitObject(rar2020.srt.pvn, split.by = "stage"),
+    SplitObject(srt, split.by = "stage")
+  )
+
+
+for (i in 1:length(srt.pvn.list)) {
+  srt.pvn.list[[i]] %<>%
+    SCTransform(
+      variable.features.n = 1500,
+      ncells = 1000,
+      return.only.var.genes = FALSE,
+      seed.use = reseed,
+      verbose = FALSE
+    ) %>%
+    RunPCA()
+}
+```
+
+
+```{r}
+#| label: integrate-pvn-neurons
+#| echo: false
+srt.pvn.features <-
+  SelectIntegrationFeatures(
+    object.list = srt.pvn.list,
+    nfeatures = 1500
+  )
+srt.pvn.list <-
+  PrepSCTIntegration(
+    object.list = srt.pvn.list,
+    anchor.features = srt.pvn.features
+  )
+srt.pvn.anchors <-
+  FindIntegrationAnchors(
+    object.list = srt.pvn.list,
+    normalization.method = "SCT",
+    anchor.features = srt.pvn.features,
+    dims = 1:30,
+    reduction = "rpca",
+    k.anchor = 25
+  )
+
+srt.pvn.integr <-
+  IntegrateData(
+    anchorset = srt.pvn.anchors,
+    normalization.method = "SCT",
+    k.weight = 50,
+    dims = 1:30
+  ) %>%
+  RunPCA(
+    npcs = 100,
+    seed.use = reseed,
+    verbose = FALSE
+  ) %>%
+  FindNeighbors(
+    dims = 1:100,
+    verbose = FALSE
+  ) %>%
+  RunUMAP(
+    dims = 1:100,
+    reduction = "pca",
+    return.model = TRUE,
+    slot = "data",
+    umap.method = "uwot",
+    reduction.model = NULL,
+    n.neighbors = 30L,
+    n.components = 2L,
+    metric = "cosine",
+    seed.use = reseed
+  ) %>%
+  FindClusters(
+    algorithm = 4,
+    seed.use = reseed,
+    verbose = FALSE
+  )
+
+```
+
+```{r}
+#| label: plot-integrated-pvn-neurons
+#| echo: false
+#| fig-height: 7
+#| fig-asp: 0.309
+p11 <- DimPlot(srt.pvn.integr,
+  reduction = "umap",
+  group.by = "stage"
+)
+p22 <- DimPlot(srt.pvn.integr,
+  reduction = "umap",
+  group.by = "wtree",
+  label = TRUE,
+  repel = TRUE
+)
+
+p11 + p22
+```
+
+```{r}
+#| label: plot-integrated-pvn-split
+#| echo: false
+#| fig-height: 5
+#| fig-width: 9
+plots <- DimPlot(srt.pvn.integr, group.by = c("age", "wtree"), combine = FALSE)
+plots <- lapply(X = plots, FUN = function(x) x + theme(legend.position = "top") + guides(color = guide_legend(nrow = 3, byrow = TRUE, override.aes = list(size = 3))))
+CombinePlots(plots)
+```
+
+```{r}
+#| label: plot-integrated-pvn-clusters
+#| echo: false
+DimPlot(srt.pvn.integr, label = TRUE) + NoLegend()
+```
+
+```{r}
+#| label: plot-integrated-pvn-neurotrans
+#| echo: false
+# DefaultAssay(srt.pvn.integr) <- "RNA"
+# srt.pvn.integr <-
+#   SCTransform(srt.pvn.integr,
+#     variable.features.n = 3000,
+#     ncells = 4000,
+#     vars.to.regress = c("log_umi_per_gene"),
+#     return.only.var.genes = FALSE,
+#     seed.use = reseed,
+#     verbose = FALSE
+#   )
+# FeaturePlot(srt.pvn.integr, features = neurotrans, pt.size = 0.7, ncol = 3)
+
+```
+
+```{r}
+#| label: plot-feature-cb-pvn-both
+#| fig-width: 32
+#| fig-height: 32
+FeaturePlot(
+  srt.pvn.integr,
+  features = c(cnbn),
+  label = T,
+  blend = F,
+  order = TRUE,
+  pt.size = 1.2,
+  raster.dpi = c(1024, 1024),
+  alpha = 0.5,
+  split.by = "stage"
+)
+```
+
+```{r}
+#| label: differential-expression-test-integrated-pvn
+# Idents(srt.pvn.integr) <- factor(srt.pvn.integr$wtree)
+# all_markers_pvn_wtree_final <- FindAllMarkers(srt.pvn.integr,
+#   assay = "SCT",
+#   test.use = "wilcox",
+#   logfc.threshold = 0.05,
+#   min.pct = 0.05,
+#   random.seed = reseed,
+#   return.thresh = 0.01
+# )
+# 
+# all_markers_pvn_wtree_final %>%
+#   group_by(cluster) %>%
+#   filter(p_val_adj < 0.01) %>%
+#   slice_max(n = 4, order_by = avg_logFC)
+# 
+# readr::write_csv(all_markers_wtree_final,
+#   path = here::here(
+#     tables_dir,
+#     "all-markers_pvn_wilcox-test-sct.csv"
+#   )
+# )
+# 
+# all_markers_pvn_wtree_final <-
+#   readr::read_csv(here::here(
+#     tables_dir,
+#     "all-markers_pvn_wilcox-test-sct.csv"
+#   ))
+```
+
+
+# Dotplots
+
+```{r}
+#| label: plt-dotplot-dendrogram-genes-npr
+#| fig-width: 6
+#| fig-height: 6
+goi <- c(cnbn)
+Idents(srt) <- "age"
+
+DotPlot_scCustom(seurat_object = srt.pvn.integr, colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "E"), features = goi[goi %in% rownames(srt)], flip_axes = T, x_lab_rotate = TRUE, dot.scale = 15)
+
+DotPlot(srt, features = goi[goi %in% rownames(srt)], dot.scale = 15)
+```
+
+```{r}
+#| label: session-info
+sessioninfo::session_info()
+
+```
+

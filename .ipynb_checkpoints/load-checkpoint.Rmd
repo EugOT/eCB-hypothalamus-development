@@ -1,0 +1,174 @@
+---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+suppressPackageStartupMessages({
+    library(readr)
+    library(stringr)
+    library(dplyr)
+    library(magrittr)
+    library(SingleCellExperiment)
+    library(scater)
+    library(flexmix)
+    library(splines)
+    library(BiocParallel)
+    library(biomaRt)
+    library(miQC)
+    library(Seurat)
+    library(SeuratDisk)
+})
+
+d.umap <- read_csv("GSE132355_E10-P45_umap_data.csv")
+glimpse(d.umap)
+d.umap %>% skimr::skim()
+d.umap %<>%
+  dplyr::mutate(orig.ident = X1 %>%
+                  stringr::str_split_fixed(pattern = "_", n = 2) %>%
+                  .[, 1],
+                bc_name = X1 %>%
+                  stringr::str_split_fixed(pattern = "_", n = 2) %>%
+                  .[, 2])
+
+runs <- 
+    list.dirs() %>% 
+    .[stringr::str_detect(string = ., pattern = "GSM38")] %>% 
+    str_remove(pattern = "./")
+
+prepRun <- function(pathr) {
+    renm <- c("E15", "E15L", "E16", "E16V1", "P45", "P45X")
+    names(renm) <- c("E15-1", "E15-2", "E16-1", "E16-2", "P45-1", "P45-2")
+    prj <- 
+        pathr %>% 
+        str_split_fixed(pattern = "_", n = 2) %>% 
+        .[, 1]
+    if (prj %in% names(renm)) {
+        prj <- renm[prj]
+    }
+    result_f <- sprintf("%s.h5Seurat", prj)
+    mtx <- Read10X(data.dir = sprintf("%s/", pathr))
+    ## Initialize the Seurat object with the raw (non-normalized data).
+    srt <- CreateSeuratObject(
+        counts = mtx,
+        project = prj,
+        min.cells = 0,
+        min.features = 200
+    )
+    
+    srt@meta.data %<>% 
+    tibble::rownames_to_column(var = "bc_name") %>% 
+    dplyr::mutate(bc_name = bc_name %>% 
+                      stringr::str_split_fixed(pattern = "-", n = 2) %>% 
+                      .[,1]) %>% 
+    dplyr::left_join(x = ., y = d.umap)
+    
+    keep <-
+        d.umap$Cluster %>%
+        table() %>%
+        names() %>%
+        .[stringr::str_detect(string = .,
+                              pattern = "Unknown",
+                              negate = T)]
+    
+    rownames(srt@meta.data) <- colnames(srt)
+    Idents(srt) <- "Cluster"
+    srt %<>% subset(idents = keep %>% .[. %in% Idents(srt)]) 
+    
+    # sce <- as.SingleCellExperiment(srt)
+    # 
+    # mt_genes <- grepl("^mt-",  rownames(sce))
+    # feature_ctrls <- list(mito = rownames(sce)[mt_genes])
+    # sce <- addPerCellQC(sce, subsets = feature_ctrls,
+    #                 BPPARAM = BiocParallel::MulticoreParam())
+    # model <- mixtureModel(sce, model_type = "spline")
+    # sce <- filterCells(sce, model, posterior_cutoff = 0.9)
+    # srt <- as.Seurat(sce)
+    Idents(srt) <- "Cluster"
+    SaveH5Seurat(srt, filename = result_f)
+    Convert(result_f, dest = "h5ad")
+    
+    return(srt)
+}
+nameRun <- function(pathr) {
+    renm <- c("E15", "E15L", "E16", "E16V1", "P45", "P45X")
+    names(renm) <- c("E15-1", "E15-2", "E16-1", "E16-2", "P45-1", "P45-2")
+    prj <- 
+        pathr %>% 
+        str_split_fixed(pattern = "_", n = 2) %>% 
+        .[, 1]
+    if (prj %in% names(renm)) {
+        prj <- renm[prj]
+    }
+    return(prj)
+}
+srt_list <- runs %>% purrr::map(prepRun)
+names(srt_list) <- runs %>% purrr::map_chr(nameRun)
+```
+
+```{r}
+kim2020_combined <- 
+    merge(srt_list[["E10"]],
+          y = c(srt_list[["E11"]],
+                srt_list[["E12"]],
+                srt_list[["E13"]],
+                srt_list[["E14"]],
+                srt_list[["E15"]],
+                srt_list[["E15L"]],
+                srt_list[["E16"]],
+                srt_list[["E18"]],
+                srt_list[["P4"]],
+                srt_list[["P8"]],
+                srt_list[["P14"]],
+                srt_list[["P45"]],
+                srt_list[["P45X"]]),
+          add.cell.ids = c("E10_kim2020",
+                           "E11_kim2020",
+                           "E12_kim2020",
+                           "E13_kim2020",
+                           "E14_kim2020",
+                           "E15_kim2020",
+                           "E15L_kim2020",
+                           "E16_kim2020",
+                           "E18_kim2020",
+                           "P4_kim2020",
+                           "P8_kim2020",
+                           "P14_kim2020",
+                           "P45_kim2020",
+                           "P45X_kim2020"), 
+                      project = "kim_2020")
+glimpse(kim2020_combined@meta.data)
+table(kim2020_combined$orig.ident)
+SaveH5Seurat(kim2020_combined, filename = "kim2020_combined.h5Seurat")
+Convert("kim2020_combined.h5Seurat", dest = "h5ad")
+rm(kim2020_combined)
+Convert("kim2020_combined.h5ad", dest = "h5seurat", overwrite = TRUE)
+kim2020_combined <- LoadH5Seurat("kim2020_combined.h5Seurat")
+kim2020_combined
+glimpse(kim2020_combined@meta.data)
+table(kim2020_combined$orig.ident)
+```
+
+```{r}
+kim2020_combined_postpub <- 
+    merge(srt_list[["P14"]],
+          y = c(srt_list[["P45"]],
+                srt_list[["P45X"]]),
+          add.cell.ids = c("P14_kim2020",
+                           "P45_kim2020",
+                           "P45X_kim2020"), 
+                      project = "kim_2020")
+glimpse(kim2020_combined_postpub@meta.data)
+table(kim2020_combined_postpub$orig.ident)
+SaveH5Seurat(kim2020_combined_postpub, filename = "kim2020_combined_postpub.h5Seurat")
+Convert("kim2020_combined_postpub.h5Seurat", dest = "h5ad")
+rm(kim2020_combined_postpub)
+Convert("kim2020_combined_postpub.h5ad", dest = "h5seurat", overwrite = TRUE)
+kim2020_combined_postpub <- LoadH5Seurat("kim2020_combined_postpub.h5Seurat")
+kim2020_combined_postpub
+glimpse(kim2020_combined_postpub@meta.data)
+table(kim2020_combined_postpub$orig.ident)
+```
+
