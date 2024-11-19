@@ -35,7 +35,9 @@ knitr:
 
 
 
+
 ## Setup parameters
+
 
 
 ::: {.cell layout-align="center"}
@@ -74,7 +76,9 @@ sc <- import("scanpy", convert = FALSE)
 :::
 
 
+
 ### Set paths
+
 
 
 ::: {.cell layout-align="center"}
@@ -89,7 +93,9 @@ tables_dir <- here(output_dir, "tables/")
 :::
 
 
+
 ### Load helper functions and gene-sets
+
 
 
 ::: {.cell layout-align="center"}
@@ -101,7 +107,9 @@ source(here(src_dir, "functions.R"))
 :::
 
 
+
 ### Set fixed variables
+
 
 
 ::: {.cell layout-align="center"}
@@ -161,7 +169,9 @@ signature <- 100
 :::
 
 
+
 ## Load Kim DW et al 2020
+
 
 
 ::: {.cell layout-align="center"}
@@ -174,7 +184,9 @@ anndata <- sc$read(here(
 :::
 
 
+
 ### Convert adata object to R AnnDataR6 object.
+
 
 ::: {.cell layout-align="center"}
 
@@ -245,7 +257,9 @@ srt <- Store_Palette_Seurat(seurat_object = srt, palette = rev(brewer.pal(n = 11
 :::
 
 
+
 ## Load Romanov et al 2020
+
 
 
 ::: {.cell layout-align="center"}
@@ -302,26 +316,26 @@ glimpse(rar2020.srt.pub@meta.data)
 ```
 Rows: 51,199
 Columns: 20
-$ nGene            <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, …
-$ nUMI             <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86…
-$ orig.ident       <fct> Hypothalamus, Hypothalamus, Hypothalamus, Hypothalamu…
-$ res.0.2          <chr> "23", "23", "23", "23", "23", "23", "23", "23", "23",…
-$ res.0.4          <chr> "34", "34", "34", "34", "34", "34", "34", "34", "34",…
-$ res.0.8          <chr> "42", "42", "42", "42", "42", "42", "42", "42", "42",…
-$ res.1.2          <chr> "47", "47", "47", "47", "47", "47", "47", "47", "47",…
-$ res.2            <chr> "54", "54", "54", "54", "54", "54", "54", "54", "54",…
-$ tree.ident       <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,…
-$ pro_Inter        <chr> "41", "41", "41", "41", "41", "41", "41", "41", "41",…
-$ pro_Enter        <chr> "41", "41", "41", "41", "41", "41", "41", "41", "41",…
-$ tree_final       <fct> 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 1…
-$ subtree          <fct> 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 4…
-$ prim_walktrap    <fct> 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 3…
-$ umi_per_gene     <dbl> 1.687046, 1.393862, 1.217002, 1.587925, 1.642857, 1.3…
-$ log_umi_per_gene <dbl> 0.22712693, 0.14421974, 0.08529138, 0.20082998, 0.215…
-$ nCount_RNA       <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86…
-$ nFeature_RNA     <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, …
-$ wtree            <fct> 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 3…
-$ age              <chr> "P23", "3P2", "3P2", "P2", "P2", "P2", "P2", "P2", "P…
+$ nGene            <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, ~
+$ nUMI             <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86~
+$ orig.ident       <fct> Hypothalamus, Hypothalamus, Hypothalamus, Hypothalamu~
+$ res.0.2          <chr> "23", "23", "23", "23", "23", "23", "23", "23", "23",~
+$ res.0.4          <chr> "34", "34", "34", "34", "34", "34", "34", "34", "34",~
+$ res.0.8          <chr> "42", "42", "42", "42", "42", "42", "42", "42", "42",~
+$ res.1.2          <chr> "47", "47", "47", "47", "47", "47", "47", "47", "47",~
+$ res.2            <chr> "54", "54", "54", "54", "54", "54", "54", "54", "54",~
+$ tree.ident       <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,~
+$ pro_Inter        <chr> "41", "41", "41", "41", "41", "41", "41", "41", "41",~
+$ pro_Enter        <chr> "41", "41", "41", "41", "41", "41", "41", "41", "41",~
+$ tree_final       <fct> 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 1~
+$ subtree          <fct> 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 4~
+$ prim_walktrap    <fct> 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 3~
+$ umi_per_gene     <dbl> 1.687046, 1.393862, 1.217002, 1.587925, 1.642857, 1.3~
+$ log_umi_per_gene <dbl> 0.22712693, 0.14421974, 0.08529138, 0.20082998, 0.215~
+$ nCount_RNA       <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86~
+$ nFeature_RNA     <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, ~
+$ wtree            <fct> 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 3~
+$ age              <chr> "P23", "3P2", "3P2", "P2", "P2", "P2", "P2", "P2", "P~
 ```
 :::
 
@@ -367,16 +381,16 @@ rar2020.srt.pub$stage %<>% factor(levels = c("Embryonic", "Neonatal", "Pubertal"
 rar2020.srt.pub$stage %>% forcats::fct_count()
 ```
 
-::: {.cell-output-display}
-
-`````{=html}
-<div data-pagedtable="false">
-  <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["f"],"name":[1],"type":["fct"],"align":["left"]},{"label":["n"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"Embryonic","2":"19503"},{"1":"Neonatal","2":"20316"},{"1":"Pubertal","2":"8965"},{"1":"Adult","2":"2415"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-`````
-
+::: {.cell-output .cell-output-stdout}
+```
+# A tibble: 4 x 2
+  f             n
+  <fct>     <int>
+1 Embryonic 19503
+2 Neonatal  20316
+3 Pubertal   8965
+4 Adult      2415
+```
 :::
 :::
 
@@ -415,16 +429,18 @@ rar2020.srt.pvn$age <-
 rar2020.srt.pub$age %>% forcats::fct_count()
 ```
 
-::: {.cell-output-display}
-
-`````{=html}
-<div data-pagedtable="false">
-  <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["f"],"name":[1],"type":["fct"],"align":["left"]},{"label":["n"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"E15","2":"8290"},{"1":"E17","2":"11213"},{"1":"P00","2":"7492"},{"1":"P02","2":"12824"},{"1":"P10","2":"8965"},{"1":"P23","2":"2415"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-`````
-
+::: {.cell-output .cell-output-stdout}
+```
+# A tibble: 6 x 2
+  f         n
+  <fct> <int>
+1 E15    8290
+2 E17   11213
+3 P00    7492
+4 P02   12824
+5 P10    8965
+6 P23    2415
+```
 :::
 :::
 
@@ -445,7 +461,7 @@ FeaturePlot(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-feature-cb-romanov2020-1.png){fig-align='center' width=5400}
+![](02-endo-cb_files/figure-pdf/plot-feature-cb-romanov2020-1.png){fig-align='center' fig-pos='H' width=5400}
 :::
 :::
 
@@ -504,7 +520,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-all-romanov2020-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-all-romanov2020-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
 
@@ -527,7 +543,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-not-grouped-e-cb-all-romanov2020-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-not-grouped-e-cb-all-romanov2020-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
 
@@ -545,50 +561,52 @@ sbs_mtx_full |> glimpse()
 ```
 Rows: 51,199
 Columns: 38
-$ Slc17a6          <dbl> 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Slc17a8          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Slc1a1           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Slc1a2           <dbl> 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Slc1a6           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Gad1             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,…
-$ Slc32a1          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Slc6a1           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Cnr1             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Gpr55            <dbl> 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Dagla            <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Daglb            <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Mgll             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Faah             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Napepld          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Gde1             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,…
-$ Pparg            <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ nGene            <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, …
-$ nUMI             <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86…
-$ orig.ident       <fct> Hypothalamus, Hypothalamus, Hypothalamus, Hypothalamu…
-$ res.0.2          <chr> "23", "23", "23", "23", "23", "23", "23", "23", "23",…
-$ res.0.4          <chr> "34", "34", "34", "34", "34", "34", "34", "34", "34",…
-$ res.0.8          <chr> "42", "42", "42", "42", "42", "42", "42", "42", "42",…
-$ res.1.2          <chr> "47", "47", "47", "47", "47", "47", "47", "47", "47",…
-$ res.2            <chr> "54", "54", "54", "54", "54", "54", "54", "54", "54",…
-$ tree.ident       <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,…
-$ pro_Inter        <chr> "41", "41", "41", "41", "41", "41", "41", "41", "41",…
-$ pro_Enter        <chr> "41", "41", "41", "41", "41", "41", "41", "41", "41",…
-$ tree_final       <fct> 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 1…
-$ subtree          <fct> 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 4…
-$ prim_walktrap    <fct> 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 3…
-$ umi_per_gene     <dbl> 1.687046, 1.393862, 1.217002, 1.587925, 1.642857, 1.3…
-$ log_umi_per_gene <dbl> 0.22712693, 0.14421974, 0.08529138, 0.20082998, 0.215…
-$ nCount_RNA       <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86…
-$ nFeature_RNA     <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, …
-$ wtree            <fct> 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 3…
-$ age              <chr> "P23", "P02", "P02", "P02", "P02", "P02", "P02", "P02…
-$ stage            <ord> Adult, Neonatal, Neonatal, Neonatal, Neonatal, Neonat…
+$ Slc17a6          <dbl> 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+$ Slc17a8          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+$ Slc1a1           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+$ Slc1a2           <dbl> 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+$ Slc1a6           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+$ Gad1             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,~
+$ Slc32a1          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+$ Slc6a1           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,~
+$ Cnr1             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+$ Gpr55            <dbl> 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+$ Dagla            <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+$ Daglb            <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+$ Mgll             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+$ Faah             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+$ Napepld          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+$ Gde1             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,~
+$ Pparg            <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
+$ nGene            <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, ~
+$ nUMI             <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86~
+$ orig.ident       <fct> Hypothalamus, Hypothalamus, Hypothalamus, Hypothalamu~
+$ res.0.2          <chr> "23", "23", "23", "23", "23", "23", "23", "23", "23",~
+$ res.0.4          <chr> "34", "34", "34", "34", "34", "34", "34", "34", "34",~
+$ res.0.8          <chr> "42", "42", "42", "42", "42", "42", "42", "42", "42",~
+$ res.1.2          <chr> "47", "47", "47", "47", "47", "47", "47", "47", "47",~
+$ res.2            <chr> "54", "54", "54", "54", "54", "54", "54", "54", "54",~
+$ tree.ident       <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,~
+$ pro_Inter        <chr> "41", "41", "41", "41", "41", "41", "41", "41", "41",~
+$ pro_Enter        <chr> "41", "41", "41", "41", "41", "41", "41", "41", "41",~
+$ tree_final       <fct> 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 1~
+$ subtree          <fct> 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 4~
+$ prim_walktrap    <fct> 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 3~
+$ umi_per_gene     <dbl> 1.687046, 1.393862, 1.217002, 1.587925, 1.642857, 1.3~
+$ log_umi_per_gene <dbl> 0.22712693, 0.14421974, 0.08529138, 0.20082998, 0.215~
+$ nCount_RNA       <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86~
+$ nFeature_RNA     <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, ~
+$ wtree            <fct> 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 3~
+$ age              <chr> "P23", "P02", "P02", "P02", "P02", "P02", "P02", "P02~
+$ stage            <ord> Adult, Neonatal, Neonatal, Neonatal, Neonatal, Neonat~
 ```
 :::
 :::
 
 
+
 ## Prepare query mapping between datasets
+
 
 
 ::: {.cell layout-align="center"}
@@ -658,7 +676,7 @@ p1 + p2
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-reference-umap-transfered-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/plot-reference-umap-transfered-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
 
@@ -677,7 +695,7 @@ p2 <- FeaturePlot_scCustom(srt,
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-reference-umap-transfered-genes-1.png){fig-align='center' width=5400}
+![](02-endo-cb_files/figure-pdf/plot-reference-umap-transfered-genes-1.png){fig-align='center' fig-pos='H' width=5400}
 :::
 :::
 
@@ -694,7 +712,7 @@ DimPlot_scCustom(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/ref-embedding-split-age-1.png){fig-align='center' width=6300}
+![](02-endo-cb_files/figure-pdf/ref-embedding-split-age-1.png){fig-align='center' fig-pos='H' width=6300}
 :::
 :::
 
@@ -723,7 +741,7 @@ DimPlot_scCustom(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/ref-embedding-split-stage-1.png){fig-align='center' width=6300}
+![](02-endo-cb_files/figure-pdf/ref-embedding-split-stage-1.png){fig-align='center' fig-pos='H' width=6300}
 :::
 :::
 
@@ -757,9 +775,11 @@ Active assay: RNA (27998 features, 3000 variable features)
 :::
 
 
+
 ## Intersection sets analysis
 
 ### PVN Neurons from Kim et al. 2020, Nature Communications
+
 
 
 ::: {.cell layout-align="center"}
@@ -769,7 +789,7 @@ FeaturePlot_scCustom(srt, reduction = "ref.umap", features = c("Oxt", "Avp", "Ss
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-reference-umap-transfered-genes-split-by-stages-1.png){fig-align='center' width=5400}
+![](02-endo-cb_files/figure-pdf/plot-reference-umap-transfered-genes-split-by-stages-1.png){fig-align='center' fig-pos='H' width=5400}
 :::
 :::
 
@@ -780,7 +800,7 @@ FeaturePlot_scCustom(srt, reduction = "ref.umap", features = c(cnbn), split.by =
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-reference-umap-feature-cb-split-by-stages-1.png){fig-align='center' width=5400}
+![](02-endo-cb_files/figure-pdf/plot-reference-umap-feature-cb-split-by-stages-1.png){fig-align='center' fig-pos='H' width=5400}
 :::
 :::
 
@@ -824,7 +844,9 @@ content_sbs_mtx_kim <-
 :::
 
 
+
 #### All
+
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -848,12 +870,14 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-kim2020-pvn-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-kim2020-pvn-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
+
 
 
 #### Embryonic
+
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -881,12 +905,14 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-kim2020-pvn-Embryonic-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-kim2020-pvn-Embryonic-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
+
 
 
 #### Neonatal
+
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -916,12 +942,14 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-kim2020-pvn-Neonatal-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-kim2020-pvn-Neonatal-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
+
 
 
 #### Pubertal
+
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -951,12 +979,14 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-kim2020-pvn-Pubertal-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-kim2020-pvn-Pubertal-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
+
 
 
 #### Adult
+
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -986,12 +1016,14 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-kim2020-pvn-Adult-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-kim2020-pvn-Adult-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
+
 
 
 ### PVN Neurons from Romanov et al. 2020, Nature
+
 
 
 ::: {.cell layout-align="center"}
@@ -1001,7 +1033,7 @@ FeaturePlot_scCustom(rar2020.srt.pvn, reduction = "umap", features = c(cnbn), sp
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-romanov2020-pvn-feature-cb-split-by-stages-1.png){fig-align='center' width=5400}
+![](02-endo-cb_files/figure-pdf/plot-romanov2020-pvn-feature-cb-split-by-stages-1.png){fig-align='center' fig-pos='H' width=5400}
 :::
 :::
 
@@ -1022,7 +1054,7 @@ FeaturePlot(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-feature-cb-romanov2020-pvn-1.png){fig-align='center' width=5400}
+![](02-endo-cb_files/figure-pdf/plot-feature-cb-romanov2020-pvn-1.png){fig-align='center' fig-pos='H' width=5400}
 :::
 :::
 
@@ -1063,7 +1095,9 @@ content_sbs_mtx_romanov <-
 :::
 
 
+
 #### All
+
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -1086,12 +1120,14 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-romanov2020-pvn-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
+
 
 
 #### Embryonic
+
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -1120,12 +1156,14 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-Embryonic-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-romanov2020-pvn-Embryonic-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
+
 
 
 #### Neonatal
+
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -1154,12 +1192,14 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-Neonatal-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-romanov2020-pvn-Neonatal-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
+
 
 
 #### Pubertal
+
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -1188,12 +1228,14 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-Pubertal-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-romanov2020-pvn-Pubertal-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
+
 
 
 #### Adult
+
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -1222,12 +1264,14 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-Adult-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-romanov2020-pvn-Adult-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
+
 
 
 ### PVN Neurons from both datasets joined
+
 
 
 ::: {.cell layout-align="center"}
@@ -1248,7 +1292,9 @@ content_sbs_mtx <-
 :::
 
 
+
 #### All
+
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -1272,14 +1318,16 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
+
 
 
 #### Embryonic
 
 
+
 ::: {.cell layout-align="center" fig.asp='1.214'}
 
 ```{.r .cell-code}
@@ -1306,7 +1354,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Embryonic-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Embryonic-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
 
@@ -1336,7 +1384,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Embryonic-f2-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Embryonic-f2-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
 
@@ -1366,7 +1414,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Embryonic-f3-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Embryonic-f3-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
 
@@ -1396,14 +1444,16 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Embryonic-f4-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Embryonic-f4-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
+
 
 
 #### Neonatal
 
 
+
 ::: {.cell layout-align="center" fig.asp='1.214'}
 
 ```{.r .cell-code}
@@ -1430,7 +1480,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Neonatal-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Neonatal-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
 
@@ -1460,7 +1510,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Neonatal-f2-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Neonatal-f2-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
 
@@ -1490,7 +1540,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Neonatal-f3-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Neonatal-f3-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
 
@@ -1520,14 +1570,16 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Neonatal-f4-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Neonatal-f4-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
+
 
 
 #### Pubertal
 
 
+
 ::: {.cell layout-align="center" fig.asp='1.214'}
 
 ```{.r .cell-code}
@@ -1554,7 +1606,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Pubertal-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Pubertal-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
 
@@ -1584,7 +1636,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Pubertal-f2-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Pubertal-f2-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
 
@@ -1614,7 +1666,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Pubertal-f3-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Pubertal-f3-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
 
@@ -1644,14 +1696,16 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Pubertal-f4-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Pubertal-f4-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
+
 
 
 #### Adult
 
 
+
 ::: {.cell layout-align="center" fig.asp='1.214'}
 
 ```{.r .cell-code}
@@ -1678,7 +1732,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Adult-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
 
@@ -1708,7 +1762,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f2-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Adult-f2-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
 
@@ -1738,7 +1792,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f3-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Adult-f3-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
 
@@ -1768,12 +1822,14 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f4-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Adult-f4-1.png){fig-align='center' fig-pos='H' width=4200}
 :::
 :::
+
 
 
 ### Contingency tables
+
 
 
 ::: {.cell layout-align="center"}
@@ -1782,69 +1838,81 @@ upset(
 rar2020.srt.pvn$age %>% forcats::fct_count()
 ```
 
-::: {.cell-output-display}
-
-`````{=html}
-<div data-pagedtable="false">
-  <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["f"],"name":[1],"type":["fct"],"align":["left"]},{"label":["n"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"E15","2":"332"},{"1":"E17","2":"609"},{"1":"P00","2":"368"},{"1":"P02","2":"378"},{"1":"P10","2":"447"},{"1":"P23","2":"67"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-`````
-
+::: {.cell-output .cell-output-stdout}
+```
+# A tibble: 6 x 2
+  f         n
+  <fct> <int>
+1 E15     332
+2 E17     609
+3 P00     368
+4 P02     378
+5 P10     447
+6 P23      67
+```
 :::
 
 ```{.r .cell-code}
 rar2020.srt.pvn$stage %>% forcats::fct_count()
 ```
 
-::: {.cell-output-display}
-
-`````{=html}
-<div data-pagedtable="false">
-  <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["f"],"name":[1],"type":["fct"],"align":["left"]},{"label":["n"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"Embryonic","2":"941"},{"1":"Neonatal","2":"746"},{"1":"Pubertal","2":"447"},{"1":"Adult","2":"67"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-`````
-
+::: {.cell-output .cell-output-stdout}
+```
+# A tibble: 4 x 2
+  f             n
+  <fct>     <int>
+1 Embryonic   941
+2 Neonatal    746
+3 Pubertal    447
+4 Adult        67
+```
 :::
 
 ```{.r .cell-code}
 srt$age %>% forcats::fct_count()
 ```
 
-::: {.cell-output-display}
-
-`````{=html}
-<div data-pagedtable="false">
-  <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["f"],"name":[1],"type":["fct"],"align":["left"]},{"label":["n"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"E10","2":"22"},{"1":"E11","2":"169"},{"1":"E12","2":"374"},{"1":"E13","2":"292"},{"1":"E14","2":"541"},{"1":"E15","2":"445"},{"1":"E16","2":"657"},{"1":"E18","2":"369"},{"1":"P14","2":"216"},{"1":"P4","2":"199"},{"1":"P45","2":"737"},{"1":"P8","2":"545"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-`````
-
+::: {.cell-output .cell-output-stdout}
+```
+# A tibble: 12 x 2
+   f         n
+   <fct> <int>
+ 1 E10      22
+ 2 E11     169
+ 3 E12     374
+ 4 E13     292
+ 5 E14     541
+ 6 E15     445
+ 7 E16     657
+ 8 E18     369
+ 9 P14     216
+10 P4      199
+11 P45     737
+12 P8      545
+```
 :::
 
 ```{.r .cell-code}
 srt$stage %>% forcats::fct_count()
 ```
 
-::: {.cell-output-display}
-
-`````{=html}
-<div data-pagedtable="false">
-  <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["f"],"name":[1],"type":["fct"],"align":["left"]},{"label":["n"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"Embryonic","2":"2869"},{"1":"Neonatal","2":"744"},{"1":"Pubertal","2":"216"},{"1":"Adult","2":"737"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-`````
-
+::: {.cell-output .cell-output-stdout}
+```
+# A tibble: 4 x 2
+  f             n
+  <fct>     <int>
+1 Embryonic  2869
+2 Neonatal    744
+3 Pubertal    216
+4 Adult       737
+```
 :::
 :::
+
 
 
 ## Integration of PVN neurons from both datasets
+
 
 
 ::: {.cell layout-align="center"}
@@ -1903,19 +1971,19 @@ srt$stage %>% forcats::fct_count()
 
 ::: {.cell layout-align="center" fig.asp='0.309'}
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-integrated-pvn-neurons-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/plot-integrated-pvn-neurons-1.png){fig-align='center' width=4200}
 :::
 :::
 
 ::: {.cell layout-align="center"}
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-integrated-pvn-split-1.png){fig-align='center' width=2700}
+![](02-endo-cb_files/figure-pdf/plot-integrated-pvn-split-1.png){fig-align='center' width=2700}
 :::
 :::
 
 ::: {.cell layout-align="center"}
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-integrated-pvn-clusters-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-pdf/plot-integrated-pvn-clusters-1.png){fig-align='center' width=4200}
 :::
 :::
 
@@ -1940,7 +2008,7 @@ FeaturePlot(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-feature-cb-pvn-both-1.png){fig-align='center' width=9600}
+![](02-endo-cb_files/figure-pdf/plot-feature-cb-pvn-both-1.png){fig-align='center' fig-pos='H' width=9600}
 :::
 :::
 
@@ -1979,7 +2047,9 @@ FeaturePlot(
 
 
 
+
 # Dotplots
+
 
 
 ::: {.cell layout-align="center"}
@@ -1992,7 +2062,7 @@ DotPlot_scCustom(seurat_object = srt.pvn.integr, colors_use = viridis(n = 30, al
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plt-dotplot-dendrogram-genes-npr-1.png){fig-align='center' width=1800}
+![](02-endo-cb_files/figure-pdf/plt-dotplot-dendrogram-genes-npr-1.png){fig-align='center' fig-pos='H' width=1800}
 :::
 
 ```{.r .cell-code}
@@ -2000,7 +2070,7 @@ DotPlot(srt, features = goi[goi %in% rownames(srt)], dot.scale = 15)
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plt-dotplot-dendrogram-genes-npr-2.png){fig-align='center' width=1800}
+![](02-endo-cb_files/figure-pdf/plt-dotplot-dendrogram-genes-npr-2.png){fig-align='center' fig-pos='H' width=1800}
 :::
 :::
 
@@ -2012,7 +2082,7 @@ sessioninfo::session_info()
 
 ::: {.cell-output .cell-output-stdout}
 ```
-─ Session info ───────────────────────────────────────────────────────────────
+- Session info ---------------------------------------------------------------
  setting  value
  version  R version 4.4.0 (2024-04-24)
  os       Ubuntu 22.04.4 LTS
@@ -2023,9 +2093,9 @@ sessioninfo::session_info()
  ctype    en_US.UTF-8
  tz       Etc/UTC
  date     2024-11-19
- pandoc   3.1.11.1 @ /home/etretiakov/micromamba/bin/ (via rmarkdown)
+ pandoc   3.2 @ /opt/python/3.8.8/bin/ (via rmarkdown)
 
-─ Packages ───────────────────────────────────────────────────────────────────
+- Packages -------------------------------------------------------------------
  package              * version     date (UTC) lib source
  abind                  1.4-8       2024-09-12 [2] RSPM (R 4.4.0)
  anndata              * 0.7.5.6     2023-03-17 [2] RSPM (R 4.4.0)
@@ -2038,6 +2108,7 @@ sessioninfo::session_info()
  BiocManager            1.30.23     2024-05-04 [2] RSPM (R 4.4.0)
  bit                    4.0.5       2022-11-15 [2] RSPM (R 4.4.0)
  bit64                  4.0.5       2020-08-30 [2] RSPM (R 4.4.0)
+ callr                  3.7.6       2024-03-25 [2] RSPM (R 4.4.0)
  circlize               0.4.16      2024-06-19 [2] Github (jokergoo/circlize@9b21578)
  cli                    3.6.3       2024-06-21 [2] RSPM (R 4.4.0)
  cluster                2.1.6       2023-12-01 [2] RSPM (R 4.4.0)
@@ -2064,12 +2135,14 @@ sessioninfo::session_info()
  fastmap                1.2.0       2024-05-15 [2] RSPM (R 4.4.0)
  fitdistrplus           1.2-1       2024-07-12 [2] RSPM (R 4.4.0)
  forcats              * 1.0.0       2023-01-29 [2] RSPM (R 4.4.0)
+ fs                     1.6.4       2024-04-25 [2] RSPM (R 4.4.0)
  future               * 1.34.0      2024-07-29 [2] RSPM (R 4.4.0)
  future.apply           1.11.2      2024-03-28 [2] RSPM (R 4.4.0)
  generics               0.1.3       2022-07-05 [2] RSPM (R 4.4.0)
  GenomeInfoDb           1.40.1      2024-05-24 [2] RSPM (R 4.4.0)
  GenomeInfoDbData       1.2.12      2024-06-19 [2] RSPM (R 4.4.0)
  GenomicRanges          1.56.1      2024-06-12 [2] RSPM (R 4.4.0)
+ getPass                0.2-4       2023-12-10 [2] RSPM (R 4.4.0)
  ggbeeswarm             0.7.2       2024-06-19 [2] Github (eclarke/ggbeeswarm@ce2da8a)
  ggmin                  0.0.0.9000  2024-06-19 [2] Github (sjessa/ggmin@8ada274)
  ggplot2              * 3.5.1       2024-04-23 [2] RSPM (R 4.4.0)
@@ -2078,6 +2151,7 @@ sessioninfo::session_info()
  ggrepel                0.9.6       2024-09-20 [2] Github (slowkow/ggrepel@e94776b)
  ggridges               0.5.6       2024-01-23 [2] RSPM (R 4.4.0)
  ggstatsplot          * 0.12.3.9000 2024-06-19 [2] Github (IndrajeetPatil/ggstatsplot@d55f86a)
+ git2r                  0.33.0      2023-11-26 [2] RSPM (R 4.4.0)
  glmGamPoi              1.16.0      2024-04-30 [2] RSPM (R 4.4.0)
  GlobalOptions          0.1.2       2020-06-10 [2] RSPM (R 4.4.0)
  globals                0.16.3      2024-03-08 [2] RSPM (R 4.4.0)
@@ -2133,8 +2207,10 @@ sessioninfo::session_info()
  png                    0.1-8       2022-11-29 [2] RSPM (R 4.4.0)
  polyclip               1.10-7      2024-07-23 [2] RSPM (R 4.4.0)
  prismatic              1.1.2       2024-04-10 [2] RSPM (R 4.4.0)
+ processx               3.8.4       2024-03-16 [2] RSPM (R 4.4.0)
  progressr              0.14.0      2023-08-10 [2] RSPM (R 4.4.0)
  promises               1.3.0       2024-04-05 [2] RSPM (R 4.4.0)
+ ps                     1.7.6       2024-01-18 [2] RSPM (R 4.4.0)
  purrr                * 1.0.2       2023-08-10 [2] RSPM (R 4.4.0)
  R.methodsS3            1.8.2       2022-06-13 [2] RSPM (R 4.4.0)
  R.oo                   1.26.0      2024-01-24 [2] RSPM (R 4.4.0)
@@ -2208,7 +2284,9 @@ sessioninfo::session_info()
  viridis              * 0.6.5       2024-01-29 [2] RSPM (R 4.4.0)
  viridisLite          * 0.4.2       2023-05-02 [2] RSPM (R 4.4.0)
  vroom                  1.6.5       2023-12-05 [2] RSPM (R 4.4.0)
+ whisker                0.4.1       2022-12-05 [2] RSPM (R 4.4.0)
  withr                  3.0.1       2024-07-31 [2] RSPM (R 4.4.0)
+ workflowr            * 1.7.1       2023-08-23 [2] RSPM (R 4.4.0)
  xfun                   0.47        2024-08-17 [2] RSPM (R 4.4.0)
  xtable                 1.8-4       2019-04-21 [2] RSPM (R 4.4.0)
  XVector                0.44.0      2024-04-30 [2] RSPM (R 4.4.0)
@@ -2220,7 +2298,7 @@ sessioninfo::session_info()
  [1] /home/etretiakov/R/x86_64-pc-linux-gnu-library/4.4
  [2] /opt/R/4.4.0/lib/R/library
 
-─ Python configuration ───────────────────────────────────────────────────────
+- Python configuration -------------------------------------------------------
  python:         /opt/python/3.8.8/bin/python
  libpython:      /opt/python/3.8.8/lib/libpython3.8.so
  pythonhome:     /opt/python/3.8.8:/opt/python/3.8.8
@@ -2231,7 +2309,7 @@ sessioninfo::session_info()
  
  NOTE: Python version was forced by RETICULATE_PYTHON
 
-──────────────────────────────────────────────────────────────────────────────
+------------------------------------------------------------------------------
 ```
 :::
 :::
