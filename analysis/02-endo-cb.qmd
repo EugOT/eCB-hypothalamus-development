@@ -262,20 +262,6 @@ rar2020.srt.pub$stage %<>% factor(levels = c("Embryonic", "Neonatal", "Pubertal"
 rar2020.srt.pub$stage %>% forcats::fct_count()
 ```
 
-
-```{r}
-#| label: subset-pvn
-rar2020.srt.pvn <-
-  subset(
-    x = rar2020.srt.pub,
-    idents = c(
-      "mneOXY", "mneVAS",
-      "pneSS", "pneCRH", "pneTRH"
-    ),
-    invert = FALSE
-  )
-```
-
 ```{r}
 #| label: correct-age-labels
 rar2020.srt.pub$age <-
@@ -285,12 +271,7 @@ rar2020.srt.pub$age <-
     to = c("E15", "E17", "P00", "P02", "P02", "P10", "P10", "P23")
   )
 
-rar2020.srt.pvn$age <-
-  plyr::mapvalues(
-    x = rar2020.srt.pvn$age,
-    from = c("E15", "E17", "P0", "P2", "3P2", "1P10", "P10", "P23"),
-    to = c("E15", "E17", "P00", "P02", "P02", "P10", "P10", "P23")
-  )
+
 
 rar2020.srt.pub$age %>% forcats::fct_count()
 ```
@@ -434,13 +415,11 @@ Idents(srt) <- srt$Cluster
 ```{r}
 #| label: plot-reference-umap-transfered
 p1 <- DimPlot(rar2020.srt.pub,
-  reduction = "umap", group.by = "wtree", label = TRUE, label.size = 3,
-  repel = TRUE
+  reduction = "umap", group.by = "wtree", label = F
 ) + NoLegend() + ggtitle("Reference annotations")
 p2 <- DimPlot(srt,
-  reduction = "ref.umap", group.by = "Cluster", label = TRUE,
-  label.size = 3, repel = TRUE
-) + NoLegend() + ggtitle("Query transferred Embedding")
+  reduction = "ref.umap", group.by = "Age", label = F
+) + NoLegend() + ggtitle("Query transferred Embedding (more ages)")
 p1 + p2
 ```
 
@@ -448,13 +427,62 @@ p1 + p2
 #| label: plot-reference-umap-transfered-genes
 #| fig-width: 18
 #| fig-height: 6
-p1 <- FeaturePlot_scCustom(rar2020.srt.pub,
-  reduction = "umap", features = c("Oxt", "Avp", "Sst", "Crh", "Trh"), label = TRUE, label.size = 2,
-  repel = TRUE, num_columns = 5
+p1 <- FeaturePlot_scCustom(
+  rar2020.srt.pub,
+  reduction = "umap",
+  features = c(
+    "Oxt",
+    "Avp",
+    "Sst",
+    "Crh",
+    "Trh"),
+  label = F,
+  num_columns = 5,
+  min.cutoff = 'q05',
+  na_cutoff = 2
 ) * NoLegend()
-p2 <- FeaturePlot_scCustom(srt,
-  reduction = "ref.umap", features = c("Oxt", "Avp", "Sst", "Crh", "Trh"), label = TRUE, label.size = 2,
-  repel = TRUE, num_columns = 5
+p2 <- FeaturePlot_scCustom(
+  srt,
+  reduction = "ref.umap",
+  features = c(
+    "Oxt",
+    "Avp",
+    "Sst",
+    "Crh",
+    "Trh"),
+  label = FALSE,
+  num_columns = 5,
+  min.cutoff = 'q05',
+  na_cutoff = 2
+) * NoLegend()
+(p1 / p2)
+```
+
+```{r}
+#| label: plot-reference-umap-transfered-genes-Avp-Oxt
+#| fig-width: 7.2
+#| fig-height: 6
+p1 <- FeaturePlot_scCustom(
+  rar2020.srt.pub,
+  reduction = "umap",
+  features = c(
+    "Oxt",
+    "Avp"),
+  label = F,
+  num_columns = 2,
+  min.cutoff = 'q05',
+  na_cutoff = 5
+) * NoLegend()
+p2 <- FeaturePlot_scCustom(
+  srt,
+  reduction = "ref.umap",
+  features = c(
+    "Oxt",
+    "Avp"),
+  label = FALSE,
+  num_columns = 2,
+  min.cutoff = 'q05',
+  na_cutoff = 5
 ) * NoLegend()
 (p1 / p2)
 ```
@@ -463,19 +491,13 @@ p2 <- FeaturePlot_scCustom(srt,
 #| label: ref-embedding-split-age
 #| fig-height: 18
 #| fig-width: 21
-DimPlot_scCustom(
-  srt,
-  reduction = "ref.umap",
-  split.by = "Age",
-  repel = TRUE,
-  num_columns = 4
-)
+FeaturePlot_scCustom(srt, reduction = "ref.umap", features = c("Cnr1"), split.by = "Age", label = F, num_columns = 4) * NoLegend()
 ```
 
 ```{r}
-#| label: ref-embedding-split-stage
-#| fig-height: 8
-#| fig-width: 21
+#| label: ref-embedding-split-stage-kim2020-np
+#| fig-height: 21
+#| fig-width: 18
 srt$stage <-
   srt$Age %>%
   forcats::fct_collapse(
@@ -488,13 +510,43 @@ srt$stage <-
     Adult = c("P45")
   )
 srt$stage %<>% factor(levels = c("Embryonic", "Neonatal", "Pubertal", "Adult"), ordered = TRUE)
-DimPlot_scCustom(
+FeaturePlot_scCustom(
   srt,
   reduction = "ref.umap",
-  split.by = "stage",
-  repel = TRUE,
+  features = c(
+    "Oxt", 
+    "Avp", 
+    "Sst", 
+    "Crh", 
+    "Trh"), 
+  split.by = "stage", 
+  min.cutoff = 'q05',
+  na_cutoff = 2, 
+  label = F,
   num_columns = 4
-)
+  ) * NoLegend()
+
+```
+
+```{r}
+#| label: ref-embedding-split-stage-romanov2020-np
+#| fig-height: 21
+#| fig-width: 18
+FeaturePlot_scCustom(
+  rar2020.srt.pub,
+  reduction = "umap",
+  features = c(
+    "Oxt", 
+    "Avp", 
+    "Sst", 
+    "Crh", 
+    "Trh"), 
+  split.by = "stage", 
+  min.cutoff = 'q05',
+  na_cutoff = 2, 
+  label = F,
+  num_columns = 4
+  ) * NoLegend()
 ```
 
 ```{r}
@@ -508,6 +560,7 @@ if (!file.exists(here(data_dir, "kim2020_pvn_neurons.txt"))) {
 }
 selected_cells <- read_lines(here(data_dir, "kim2020_pvn_neurons.txt"))
 srt <- subset(srt, cells = selected_cells)
+srt <- subset(srt, subset = refUMAP_1 > 4 & refUMAP_2 > -1)
 
 srt@meta.data <- srt@meta.data |> rename(wtree = predicted.id, age = Age)
 
@@ -519,14 +572,27 @@ srt
 ### PVN Neurons from Kim et al. 2020, Nature Communications
 
 ```{r}
-#| label: plot-reference-umap-transfered-genes-split-by-stages
-#| fig-height: 21
+#| label: plot-kim2020-pvn-feature-np-split-by-stages
+#| fig-height: 16.36363636
 #| fig-width: 18
-FeaturePlot_scCustom(srt, reduction = "ref.umap", features = c("Oxt", "Avp", "Sst", "Crh", "Trh"), split.by = "stage", label = F, num_columns = 4) * NoLegend()
+FeaturePlot_scCustom(
+  srt,
+  reduction = "ref.umap",
+  features = c(
+    "Oxt", 
+    "Avp", 
+    "Sst", 
+    "Crh", 
+    "Trh"), 
+  split.by = "stage", 
+  na_cutoff = 2, 
+  label = F,
+  num_columns = 4
+  ) * NoLegend()
 ```
 
 ```{r}
-#| label: plot-reference-umap-feature-cb-split-by-stages
+#| label: plot-kim2020-pvn-feature-cb-split-by-stages
 #| fig-width: 18
 #| fig-height: 36
 FeaturePlot_scCustom(srt, reduction = "ref.umap", features = c(cnbn), split.by = "stage", label = F, num_columns = 4) * NoLegend()
@@ -710,11 +776,54 @@ upset(
 ### PVN Neurons from Romanov et al. 2020, Nature
 
 ```{r}
+#| label: subset-pvn
+rar2020.srt.pvn <-
+  subset(
+    x = rar2020.srt.pub,
+    idents = c(
+      "mneOXY", "mneVAS",
+      "pneSS", "pneCRH", "pneTRH"
+    ),
+    invert = FALSE
+  )
+
+rar2020.srt.pvn <- subset(rar2020.srt.pvn, subset = umap_1 > 4 & umap_2 > -1)
+
+rar2020.srt.pvn$age <-
+  plyr::mapvalues(
+    x = rar2020.srt.pvn$age,
+    from = c("E15", "E17", "P0", "P2", "3P2", "1P10", "P10", "P23"),
+    to = c("E15", "E17", "P00", "P02", "P02", "P10", "P10", "P23")
+  )
+```
+
+```{r}
+#| label: plot-romanov2020-pvn-feature-np-split-by-stages
+#| fig-width: 18
+#| fig-height: 16.36363636
+FeaturePlot_scCustom(
+  rar2020.srt.pvn,
+  reduction = "umap",
+  features = c(
+    "Oxt", 
+    "Avp", 
+    "Sst", 
+    "Crh", 
+    "Trh"), 
+  split.by = "stage", 
+  na_cutoff = 2, 
+  label = F,
+  num_columns = 4
+  ) * NoLegend()
+```
+
+```{r}
 #| label: plot-romanov2020-pvn-feature-cb-split-by-stages
 #| fig-width: 18
 #| fig-height: 36
 FeaturePlot_scCustom(rar2020.srt.pvn, reduction = "umap", features = c(cnbn), split.by = "stage", label = F, num_columns = 4) * NoLegend()
 ```
+
 
 ```{r}
 #| label: plot-feature-cb-romanov2020-pvn
@@ -995,6 +1104,14 @@ upset(
     .[. %in% colnames(content_sbs_mtx)],
   empty.intersections = NULL
 )
+
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Embryonic") |>
+      select(
+        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
 ```
 
 ```{r}
@@ -1021,6 +1138,14 @@ upset(
     .[. %in% colnames(content_sbs_mtx)],
   empty.intersections = NULL
 )
+
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Embryonic") |>
+      select(
+        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
 ```
 
 ```{r}
@@ -1047,6 +1172,14 @@ upset(
     .[. %in% colnames(content_sbs_mtx)],
   empty.intersections = NULL
 )
+
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Embryonic") |>
+      select(
+        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
 ```
 
 #### Neonatal
@@ -1101,6 +1234,14 @@ upset(
     .[. %in% colnames(content_sbs_mtx)],
   empty.intersections = NULL
 )
+
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Neonatal") |>
+      select(
+        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
 ```
 
 ```{r}
@@ -1127,6 +1268,14 @@ upset(
     .[. %in% colnames(content_sbs_mtx)],
   empty.intersections = NULL
 )
+
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Neonatal") |>
+      select(
+        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
 ```
 
 ```{r}
@@ -1153,6 +1302,14 @@ upset(
     .[. %in% colnames(content_sbs_mtx)],
   empty.intersections = NULL
 )
+
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Neonatal") |>
+      select(
+        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
 ```
 
 #### Pubertal
@@ -1207,6 +1364,14 @@ upset(
     .[. %in% colnames(content_sbs_mtx)],
   empty.intersections = NULL
 )
+
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Pubertal") |>
+      select(
+        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
 ```
 
 ```{r}
@@ -1233,6 +1398,14 @@ upset(
     .[. %in% colnames(content_sbs_mtx)],
   empty.intersections = NULL
 )
+
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Pubertal") |>
+      select(
+        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
 ```
 
 ```{r}
@@ -1259,6 +1432,14 @@ upset(
     .[. %in% colnames(content_sbs_mtx)],
   empty.intersections = NULL
 )
+
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Pubertal") |>
+      select(
+        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
 ```
 
 #### Adult
@@ -1313,6 +1494,14 @@ upset(
     .[. %in% colnames(content_sbs_mtx)],
   empty.intersections = NULL
 )
+
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Adult") |>
+      select(
+        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
 ```
 
 ```{r}
@@ -1339,6 +1528,14 @@ upset(
     .[. %in% colnames(content_sbs_mtx)],
   empty.intersections = NULL
 )
+
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Adult") |>
+      select(
+        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
 ```
 
 ```{r}
@@ -1365,6 +1562,14 @@ upset(
     .[. %in% colnames(content_sbs_mtx)],
   empty.intersections = NULL
 )
+
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Adult") |>
+      select(
+        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
 ```
 
 ### Contingency tables
@@ -1380,204 +1585,240 @@ srt$age %>% forcats::fct_count()
 srt$stage %>% forcats::fct_count()
 ```
 
-## Integration of PVN neurons from both datasets
+## Load selected astrocytes data from Lopez JP et al (2021)
 
-```{r}
-#| label: prepare-lists-for-integration
-#| echo: false
-srt.pvn.list <-
-  c(
-    SplitObject(rar2020.srt.pvn, split.by = "stage"),
-    SplitObject(srt, split.by = "stage")
-  )
-
-
-for (i in 1:length(srt.pvn.list)) {
-  srt.pvn.list[[i]] %<>%
-    SCTransform(
-      variable.features.n = 1500,
-      ncells = 1000,
-      return.only.var.genes = FALSE,
-      seed.use = reseed,
-      verbose = FALSE
-    ) %>%
-    RunPCA()
-}
+```{r load-lopez2021-PVN-data, cache = FALSE}
+anndata <- sc$read(here(
+  "../1_heteroAstrocytes/PRJNA679294/data/",
+  "class_cello/PRJNA679294-whole_dataset-0.001-cello_annotation.h5ad"
+))
 ```
 
+### Convert adata object to R AnnDataR6 object.
+```{r convert-lopez2021-PVN-to-r}
+adata <- py_to_r(anndata)
+class(adata)
+class(adata$X)
+adata
+```
+
+```{r convert-lopez2021-PVN-to-seurat}
+expr_mtx <- t(as.matrix(adata$raw$X))
+colnames(expr_mtx) <- rownames(adata$X)
+rownames(expr_mtx) <- adata$var_names
+srt <- CreateSeuratObject(
+  expr_mtx,
+  assay = "RNA",
+  project = "individual_hypothalamic_nuclei_astrocytes_evaluation_dataset",
+  meta.data = as.data.frame(adata$obs)
+)
+
+Idents(srt) <- "ora_celltype"
+srt <- subset(srt, idents = c("Astrocytes"))
+
+Idents(srt) <- "libname"
+
+print(srt)
+rm(adata, anndata, expr_mtx)
+invisible(gc())
+```
+
+```{r scale-astro-data}
+srt <- NormalizeData(srt)
+srt <- FindVariableFeatures(srt, selection.method = "vst", nfeatures = 5000)
+all.genes <- rownames(srt)
+srt <- ScaleData(srt, features = c(VariableFeatures(srt), cnbn))
+```
 
 ```{r}
-#| label: integrate-pvn-neurons
-#| echo: false
-srt.pvn.features <-
-  SelectIntegrationFeatures(
-    object.list = srt.pvn.list,
-    nfeatures = 1500
-  )
-srt.pvn.list <-
-  PrepSCTIntegration(
-    object.list = srt.pvn.list,
-    anchor.features = srt.pvn.features
-  )
-srt.pvn.anchors <-
-  FindIntegrationAnchors(
-    object.list = srt.pvn.list,
-    normalization.method = "SCT",
-    anchor.features = srt.pvn.features,
-    dims = 1:30,
-    reduction = "rpca",
-    k.anchor = 25
-  )
-
-srt.pvn.integr <-
-  IntegrateData(
-    anchorset = srt.pvn.anchors,
-    normalization.method = "SCT",
-    k.weight = 50,
-    dims = 1:30
-  ) %>%
-  RunPCA(
-    npcs = 100,
-    seed.use = reseed,
-    verbose = FALSE
-  ) %>%
+srt <- RunPCA(srt, npcs = 50, verbose = FALSE)
+srt <-
+  srt |>
   FindNeighbors(
-    dims = 1:100,
+    dims = 1:40,
+    k.param = 40,
+    annoy.metric = "cosine",
+    n.trees = 100,
     verbose = FALSE
-  ) %>%
+  ) |>
   RunUMAP(
-    dims = 1:100,
-    reduction = "pca",
-    return.model = TRUE,
-    slot = "data",
-    umap.method = "uwot",
-    reduction.model = NULL,
-    n.neighbors = 30L,
-    n.components = 2L,
+    dims = 1:50,
+    reduction.name = "umap",
+    reduction.key = "UMAP_",
+    return.model = F,
+    n.epochs = 1000L,
+    n.neighbors = 50,
+    min.dist = 0.5,
     metric = "cosine",
-    seed.use = reseed
-  ) %>%
-  FindClusters(
-    algorithm = 4,
     seed.use = reseed,
     verbose = FALSE
+  )
+```
+
+```{r}
+#| label: plot-lopez2021-pvn-condit-astro
+#| fig-width: 6
+#| fig-height: 7
+DimPlot(srt)
+```
+
+
+```{r}
+#| label: plot-lopez2021-pvn-feature-cb
+#| fig-width: 18
+#| fig-height: 13
+FeaturePlot_scCustom(
+  srt,
+  reduction = "umap",
+  features = c(
+    "Cnr1", "Cnr2", "Gpr55", "Slc1a3",
+    "Dagla", "Daglb", "Mgll", "Gfap",
+    "Napepld", "Gde1", "Faah", "Aldh1l1"
+    ),
+  label = F,
+  num_columns = 4
+) * NoLegend()
+```
+
+
+```{r}
+#| label: e-cb-representation-lopez2021-pvn
+sbs_mtx <-
+  srt@assays$RNA@layers$data %>%
+  as.data.frame() %>%
+  t()
+
+rownames(sbs_mtx) <- colnames(srt)
+colnames(sbs_mtx) <- rownames(srt)
+
+# Filter features
+filt_low_genes <-
+  colSums(sbs_mtx) %>%
+  .[. > quantile(., 0.4)] %>%
+  names()
+sbs_mtx %<>% .[, filt_low_genes]
+
+min_filt_vector2 <-
+  sbs_mtx %>%
+  as_tibble() %>%
+  select(all_of(filt_low_genes)) %>%
+  summarise(across(.fns = ~ quantile(.x, .005))) %>%
+  as.list() %>%
+  map(as.double) %>%
+  simplify() %>%
+  .[filt_low_genes]
+
+# Prepare table of intersection sets analysis
+content_sbs_mtx <-
+  (sbs_mtx > min_filt_vector2) %>%
+  as_tibble() %>%
+  mutate_all(as.numeric) %>%
+  bind_cols(
+    srt@meta.data |> select(condit)
   )
 
 ```
 
 ```{r}
-#| label: plot-integrated-pvn-neurons
-#| echo: false
-#| fig-height: 7
-#| fig-asp: 0.309
-p11 <- DimPlot(srt.pvn.integr,
-  reduction = "umap",
-  group.by = "stage"
+#| label: upset-group-e-cb-pvn-Adult-f2-astro-norm
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(condit == 0) |>
+      select(
+        c("Cnr1", "Cnr2", "Gpr55", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Cnr1", "Cnr2", "Gpr55", "Slc1a3", "Gfap", "Aldh1l1") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
 )
-p22 <- DimPlot(srt.pvn.integr,
-  reduction = "umap",
-  group.by = "wtree",
-  label = TRUE,
-  repel = TRUE
+
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(condit == 0) |>
+      select(
+        c("Cnr1", "Cnr2", "Gpr55", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
+```
+
+```{r}
+#| label: upset-group-e-cb-pvn-Adult-f3-astro-norm
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(condit == 0) |>
+      select(
+        c("Dagla", "Daglb", "Mgll", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Dagla", "Daglb", "Mgll", "Slc1a3", "Gfap", "Aldh1l1") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
 )
 
-p11 + p22
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(condit == 0) |>
+      select(
+        c("Dagla", "Daglb", "Mgll", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
 ```
 
 ```{r}
-#| label: plot-integrated-pvn-split
-#| echo: false
-#| fig-height: 5
-#| fig-width: 9
-plots <- DimPlot(srt.pvn.integr, group.by = c("age", "wtree"), combine = FALSE)
-plots <- lapply(X = plots, FUN = function(x) x + theme(legend.position = "top") + guides(color = guide_legend(nrow = 3, byrow = TRUE, override.aes = list(size = 3))))
-CombinePlots(plots)
-```
-
-```{r}
-#| label: plot-integrated-pvn-clusters
-#| echo: false
-DimPlot(srt.pvn.integr, label = TRUE) + NoLegend()
-```
-
-```{r}
-#| label: plot-integrated-pvn-neurotrans
-#| echo: false
-# DefaultAssay(srt.pvn.integr) <- "RNA"
-# srt.pvn.integr <-
-#   SCTransform(srt.pvn.integr,
-#     variable.features.n = 3000,
-#     ncells = 4000,
-#     vars.to.regress = c("log_umi_per_gene"),
-#     return.only.var.genes = FALSE,
-#     seed.use = reseed,
-#     verbose = FALSE
-#   )
-# FeaturePlot(srt.pvn.integr, features = neurotrans, pt.size = 0.7, ncol = 3)
-
-```
-
-```{r}
-#| label: plot-feature-cb-pvn-both
-#| fig-width: 32
-#| fig-height: 32
-FeaturePlot(
-  srt.pvn.integr,
-  features = c(cnbn),
-  label = T,
-  blend = F,
-  order = TRUE,
-  pt.size = 1.2,
-  raster.dpi = c(1024, 1024),
-  alpha = 0.5,
-  split.by = "stage"
+#| label: upset-group-e-cb-pvn-Adult-f4-astro-norm
+#| fig-height: 24
+#| fig-asp: 1.214
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(condit == 0) |>
+      select(
+        c("Napepld", "Gde1", "Faah", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Napepld", "Gde1", "Faah", "Slc1a3", "Gfap", "Aldh1l1") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
 )
-```
 
-```{r}
-#| label: differential-expression-test-integrated-pvn
-# Idents(srt.pvn.integr) <- factor(srt.pvn.integr$wtree)
-# all_markers_pvn_wtree_final <- FindAllMarkers(srt.pvn.integr,
-#   assay = "SCT",
-#   test.use = "wilcox",
-#   logfc.threshold = 0.05,
-#   min.pct = 0.05,
-#   random.seed = reseed,
-#   return.thresh = 0.01
-# )
-# 
-# all_markers_pvn_wtree_final %>%
-#   group_by(cluster) %>%
-#   filter(p_val_adj < 0.01) %>%
-#   slice_max(n = 4, order_by = avg_logFC)
-# 
-# readr::write_csv(all_markers_wtree_final,
-#   path = here::here(
-#     tables_dir,
-#     "all-markers_pvn_wilcox-test-sct.csv"
-#   )
-# )
-# 
-# all_markers_pvn_wtree_final <-
-#   readr::read_csv(here::here(
-#     tables_dir,
-#     "all-markers_pvn_wilcox-test-sct.csv"
-#   ))
-```
-
-
-# Dotplots
-
-```{r}
-#| label: plt-dotplot-dendrogram-genes-npr
-#| fig-width: 6
-#| fig-height: 6
-goi <- c(cnbn)
-Idents(srt) <- "age"
-
-DotPlot_scCustom(seurat_object = srt.pvn.integr, colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "E"), features = goi[goi %in% rownames(srt)], flip_axes = T, x_lab_rotate = TRUE, dot.scale = 15)
-
-DotPlot(srt, features = goi[goi %in% rownames(srt)], dot.scale = 15)
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(condit == 0) |>
+      select(
+        c("Napepld", "Gde1", "Faah", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
 ```
 
 ```{r}

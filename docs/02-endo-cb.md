@@ -1,7 +1,7 @@
 ---
 title: "eCB expression analysis of Hypothalamus development with focus on PVN"
 author: "Evgenii O. Tretiakov"
-date: "2024-11-19"
+date: "2024-11-26"
 format:
   html:
     toc: true
@@ -35,9 +35,7 @@ knitr:
 
 
 
-
 ## Setup parameters
-
 
 
 ::: {.cell layout-align="center"}
@@ -76,9 +74,7 @@ sc <- import("scanpy", convert = FALSE)
 :::
 
 
-
 ### Set paths
-
 
 
 ::: {.cell layout-align="center"}
@@ -93,9 +89,7 @@ tables_dir <- here(output_dir, "tables/")
 :::
 
 
-
 ### Load helper functions and gene-sets
-
 
 
 ::: {.cell layout-align="center"}
@@ -107,9 +101,7 @@ source(here(src_dir, "functions.R"))
 :::
 
 
-
 ### Set fixed variables
-
 
 
 ::: {.cell layout-align="center"}
@@ -169,9 +161,7 @@ signature <- 100
 :::
 
 
-
 ## Load Kim DW et al 2020
-
 
 
 ::: {.cell layout-align="center"}
@@ -184,9 +174,7 @@ anndata <- sc$read(here(
 :::
 
 
-
 ### Convert adata object to R AnnDataR6 object.
-
 
 ::: {.cell layout-align="center"}
 
@@ -257,9 +245,7 @@ srt <- Store_Palette_Seurat(seurat_object = srt, palette = rev(brewer.pal(n = 11
 :::
 
 
-
 ## Load Romanov et al 2020
-
 
 
 ::: {.cell layout-align="center"}
@@ -316,26 +302,26 @@ glimpse(rar2020.srt.pub@meta.data)
 ```
 Rows: 51,199
 Columns: 20
-$ nGene            <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, ~
-$ nUMI             <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86~
-$ orig.ident       <fct> Hypothalamus, Hypothalamus, Hypothalamus, Hypothalamu~
-$ res.0.2          <chr> "23", "23", "23", "23", "23", "23", "23", "23", "23",~
-$ res.0.4          <chr> "34", "34", "34", "34", "34", "34", "34", "34", "34",~
-$ res.0.8          <chr> "42", "42", "42", "42", "42", "42", "42", "42", "42",~
-$ res.1.2          <chr> "47", "47", "47", "47", "47", "47", "47", "47", "47",~
-$ res.2            <chr> "54", "54", "54", "54", "54", "54", "54", "54", "54",~
-$ tree.ident       <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,~
-$ pro_Inter        <chr> "41", "41", "41", "41", "41", "41", "41", "41", "41",~
-$ pro_Enter        <chr> "41", "41", "41", "41", "41", "41", "41", "41", "41",~
-$ tree_final       <fct> 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 1~
-$ subtree          <fct> 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 4~
-$ prim_walktrap    <fct> 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 3~
-$ umi_per_gene     <dbl> 1.687046, 1.393862, 1.217002, 1.587925, 1.642857, 1.3~
-$ log_umi_per_gene <dbl> 0.22712693, 0.14421974, 0.08529138, 0.20082998, 0.215~
-$ nCount_RNA       <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86~
-$ nFeature_RNA     <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, ~
-$ wtree            <fct> 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 3~
-$ age              <chr> "P23", "3P2", "3P2", "P2", "P2", "P2", "P2", "P2", "P~
+$ nGene            <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, …
+$ nUMI             <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86…
+$ orig.ident       <fct> Hypothalamus, Hypothalamus, Hypothalamus, Hypothalamu…
+$ res.0.2          <chr> "23", "23", "23", "23", "23", "23", "23", "23", "23",…
+$ res.0.4          <chr> "34", "34", "34", "34", "34", "34", "34", "34", "34",…
+$ res.0.8          <chr> "42", "42", "42", "42", "42", "42", "42", "42", "42",…
+$ res.1.2          <chr> "47", "47", "47", "47", "47", "47", "47", "47", "47",…
+$ res.2            <chr> "54", "54", "54", "54", "54", "54", "54", "54", "54",…
+$ tree.ident       <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,…
+$ pro_Inter        <chr> "41", "41", "41", "41", "41", "41", "41", "41", "41",…
+$ pro_Enter        <chr> "41", "41", "41", "41", "41", "41", "41", "41", "41",…
+$ tree_final       <fct> 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 1…
+$ subtree          <fct> 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 4…
+$ prim_walktrap    <fct> 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 3…
+$ umi_per_gene     <dbl> 1.687046, 1.393862, 1.217002, 1.587925, 1.642857, 1.3…
+$ log_umi_per_gene <dbl> 0.22712693, 0.14421974, 0.08529138, 0.20082998, 0.215…
+$ nCount_RNA       <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86…
+$ nFeature_RNA     <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, …
+$ wtree            <fct> 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 3…
+$ age              <chr> "P23", "3P2", "3P2", "P2", "P2", "P2", "P2", "P2", "P…
 ```
 :::
 
@@ -381,32 +367,17 @@ rar2020.srt.pub$stage %<>% factor(levels = c("Embryonic", "Neonatal", "Pubertal"
 rar2020.srt.pub$stage %>% forcats::fct_count()
 ```
 
-::: {.cell-output .cell-output-stdout}
-```
-# A tibble: 4 x 2
-  f             n
-  <fct>     <int>
-1 Embryonic 19503
-2 Neonatal  20316
-3 Pubertal   8965
-4 Adult      2415
-```
-:::
-:::
+::: {.cell-output-display}
 
-::: {.cell layout-align="center"}
+`````{=html}
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":["f"],"name":[1],"type":["fct"],"align":["left"]},{"label":["n"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"Embryonic","2":"19503"},{"1":"Neonatal","2":"20316"},{"1":"Pubertal","2":"8965"},{"1":"Adult","2":"2415"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+`````
 
-```{.r .cell-code}
-rar2020.srt.pvn <-
-  subset(
-    x = rar2020.srt.pub,
-    idents = c(
-      "mneOXY", "mneVAS",
-      "pneSS", "pneCRH", "pneTRH"
-    ),
-    invert = FALSE
-  )
-```
+:::
 :::
 
 ::: {.cell layout-align="center"}
@@ -419,28 +390,21 @@ rar2020.srt.pub$age <-
     to = c("E15", "E17", "P00", "P02", "P02", "P10", "P10", "P23")
   )
 
-rar2020.srt.pvn$age <-
-  plyr::mapvalues(
-    x = rar2020.srt.pvn$age,
-    from = c("E15", "E17", "P0", "P2", "3P2", "1P10", "P10", "P23"),
-    to = c("E15", "E17", "P00", "P02", "P02", "P10", "P10", "P23")
-  )
+
 
 rar2020.srt.pub$age %>% forcats::fct_count()
 ```
 
-::: {.cell-output .cell-output-stdout}
-```
-# A tibble: 6 x 2
-  f         n
-  <fct> <int>
-1 E15    8290
-2 E17   11213
-3 P00    7492
-4 P02   12824
-5 P10    8965
-6 P23    2415
-```
+::: {.cell-output-display}
+
+`````{=html}
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":["f"],"name":[1],"type":["fct"],"align":["left"]},{"label":["n"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"E15","2":"8290"},{"1":"E17","2":"11213"},{"1":"P00","2":"7492"},{"1":"P02","2":"12824"},{"1":"P10","2":"8965"},{"1":"P23","2":"2415"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+`````
+
 :::
 :::
 
@@ -461,7 +425,7 @@ FeaturePlot(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/plot-feature-cb-romanov2020-1.png){fig-align='center' fig-pos='H' width=5400}
+![](02-endo-cb_files/figure-html/plot-feature-cb-romanov2020-1.png){fig-align='center' width=5400}
 :::
 :::
 
@@ -520,7 +484,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-all-romanov2020-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-all-romanov2020-1.png){fig-align='center' width=4200}
 :::
 :::
 
@@ -543,7 +507,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-not-grouped-e-cb-all-romanov2020-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-not-grouped-e-cb-all-romanov2020-1.png){fig-align='center' width=4200}
 :::
 :::
 
@@ -561,52 +525,50 @@ sbs_mtx_full |> glimpse()
 ```
 Rows: 51,199
 Columns: 38
-$ Slc17a6          <dbl> 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
-$ Slc17a8          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
-$ Slc1a1           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
-$ Slc1a2           <dbl> 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
-$ Slc1a6           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
-$ Gad1             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,~
-$ Slc32a1          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
-$ Slc6a1           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,~
-$ Cnr1             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
-$ Gpr55            <dbl> 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
-$ Dagla            <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
-$ Daglb            <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
-$ Mgll             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
-$ Faah             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
-$ Napepld          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
-$ Gde1             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,~
-$ Pparg            <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,~
-$ nGene            <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, ~
-$ nUMI             <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86~
-$ orig.ident       <fct> Hypothalamus, Hypothalamus, Hypothalamus, Hypothalamu~
-$ res.0.2          <chr> "23", "23", "23", "23", "23", "23", "23", "23", "23",~
-$ res.0.4          <chr> "34", "34", "34", "34", "34", "34", "34", "34", "34",~
-$ res.0.8          <chr> "42", "42", "42", "42", "42", "42", "42", "42", "42",~
-$ res.1.2          <chr> "47", "47", "47", "47", "47", "47", "47", "47", "47",~
-$ res.2            <chr> "54", "54", "54", "54", "54", "54", "54", "54", "54",~
-$ tree.ident       <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,~
-$ pro_Inter        <chr> "41", "41", "41", "41", "41", "41", "41", "41", "41",~
-$ pro_Enter        <chr> "41", "41", "41", "41", "41", "41", "41", "41", "41",~
-$ tree_final       <fct> 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 1~
-$ subtree          <fct> 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 4~
-$ prim_walktrap    <fct> 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 3~
-$ umi_per_gene     <dbl> 1.687046, 1.393862, 1.217002, 1.587925, 1.642857, 1.3~
-$ log_umi_per_gene <dbl> 0.22712693, 0.14421974, 0.08529138, 0.20082998, 0.215~
-$ nCount_RNA       <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86~
-$ nFeature_RNA     <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, ~
-$ wtree            <fct> 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 3~
-$ age              <chr> "P23", "P02", "P02", "P02", "P02", "P02", "P02", "P02~
-$ stage            <ord> Adult, Neonatal, Neonatal, Neonatal, Neonatal, Neonat~
+$ Slc17a6          <dbl> 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Slc17a8          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Slc1a1           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Slc1a2           <dbl> 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Slc1a6           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Gad1             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,…
+$ Slc32a1          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Slc6a1           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Cnr1             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Gpr55            <dbl> 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Dagla            <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Daglb            <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Mgll             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Faah             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Napepld          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Gde1             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,…
+$ Pparg            <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ nGene            <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, …
+$ nUMI             <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86…
+$ orig.ident       <fct> Hypothalamus, Hypothalamus, Hypothalamus, Hypothalamu…
+$ res.0.2          <chr> "23", "23", "23", "23", "23", "23", "23", "23", "23",…
+$ res.0.4          <chr> "34", "34", "34", "34", "34", "34", "34", "34", "34",…
+$ res.0.8          <chr> "42", "42", "42", "42", "42", "42", "42", "42", "42",…
+$ res.1.2          <chr> "47", "47", "47", "47", "47", "47", "47", "47", "47",…
+$ res.2            <chr> "54", "54", "54", "54", "54", "54", "54", "54", "54",…
+$ tree.ident       <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,…
+$ pro_Inter        <chr> "41", "41", "41", "41", "41", "41", "41", "41", "41",…
+$ pro_Enter        <chr> "41", "41", "41", "41", "41", "41", "41", "41", "41",…
+$ tree_final       <fct> 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 1…
+$ subtree          <fct> 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 41, 4…
+$ prim_walktrap    <fct> 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 3…
+$ umi_per_gene     <dbl> 1.687046, 1.393862, 1.217002, 1.587925, 1.642857, 1.3…
+$ log_umi_per_gene <dbl> 0.22712693, 0.14421974, 0.08529138, 0.20082998, 0.215…
+$ nCount_RNA       <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86…
+$ nFeature_RNA     <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, …
+$ wtree            <fct> 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, 3…
+$ age              <chr> "P23", "P02", "P02", "P02", "P02", "P02", "P02", "P02…
+$ stage            <ord> Adult, Neonatal, Neonatal, Neonatal, Neonatal, Neonat…
 ```
 :::
 :::
 
 
-
 ## Prepare query mapping between datasets
-
 
 
 ::: {.cell layout-align="center"}
@@ -665,54 +627,99 @@ Idents(srt) <- srt$Cluster
 
 ```{.r .cell-code}
 p1 <- DimPlot(rar2020.srt.pub,
-  reduction = "umap", group.by = "wtree", label = TRUE, label.size = 3,
-  repel = TRUE
+  reduction = "umap", group.by = "wtree", label = F
 ) + NoLegend() + ggtitle("Reference annotations")
 p2 <- DimPlot(srt,
-  reduction = "ref.umap", group.by = "Cluster", label = TRUE,
-  label.size = 3, repel = TRUE
-) + NoLegend() + ggtitle("Query transferred Embedding")
+  reduction = "ref.umap", group.by = "Age", label = F
+) + NoLegend() + ggtitle("Query transferred Embedding (more ages)")
 p1 + p2
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/plot-reference-umap-transfered-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/plot-reference-umap-transfered-1.png){fig-align='center' width=4200}
 :::
 :::
 
 ::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
-p1 <- FeaturePlot_scCustom(rar2020.srt.pub,
-  reduction = "umap", features = c("Oxt", "Avp", "Sst", "Crh", "Trh"), label = TRUE, label.size = 2,
-  repel = TRUE, num_columns = 5
+p1 <- FeaturePlot_scCustom(
+  rar2020.srt.pub,
+  reduction = "umap",
+  features = c(
+    "Oxt",
+    "Avp",
+    "Sst",
+    "Crh",
+    "Trh"),
+  label = F,
+  num_columns = 5,
+  min.cutoff = 'q05',
+  na_cutoff = 2
 ) * NoLegend()
-p2 <- FeaturePlot_scCustom(srt,
-  reduction = "ref.umap", features = c("Oxt", "Avp", "Sst", "Crh", "Trh"), label = TRUE, label.size = 2,
-  repel = TRUE, num_columns = 5
+p2 <- FeaturePlot_scCustom(
+  srt,
+  reduction = "ref.umap",
+  features = c(
+    "Oxt",
+    "Avp",
+    "Sst",
+    "Crh",
+    "Trh"),
+  label = FALSE,
+  num_columns = 5,
+  min.cutoff = 'q05',
+  na_cutoff = 2
 ) * NoLegend()
 (p1 / p2)
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/plot-reference-umap-transfered-genes-1.png){fig-align='center' fig-pos='H' width=5400}
+![](02-endo-cb_files/figure-html/plot-reference-umap-transfered-genes-1.png){fig-align='center' width=5400}
 :::
 :::
 
 ::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
-DimPlot_scCustom(
+p1 <- FeaturePlot_scCustom(
+  rar2020.srt.pub,
+  reduction = "umap",
+  features = c(
+    "Oxt",
+    "Avp"),
+  label = F,
+  num_columns = 2,
+  min.cutoff = 'q05',
+  na_cutoff = 5
+) * NoLegend()
+p2 <- FeaturePlot_scCustom(
   srt,
   reduction = "ref.umap",
-  split.by = "Age",
-  repel = TRUE,
-  num_columns = 4
-)
+  features = c(
+    "Oxt",
+    "Avp"),
+  label = FALSE,
+  num_columns = 2,
+  min.cutoff = 'q05',
+  na_cutoff = 5
+) * NoLegend()
+(p1 / p2)
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/ref-embedding-split-age-1.png){fig-align='center' fig-pos='H' width=6300}
+![](02-endo-cb_files/figure-html/plot-reference-umap-transfered-genes-Avp-Oxt-1.png){fig-align='center' width=2160}
+:::
+:::
+
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
+FeaturePlot_scCustom(srt, reduction = "ref.umap", features = c("Cnr1"), split.by = "Age", label = F, num_columns = 4) * NoLegend()
+```
+
+::: {.cell-output-display}
+![](02-endo-cb_files/figure-html/ref-embedding-split-age-1.png){fig-align='center' width=6300}
 :::
 :::
 
@@ -731,17 +738,50 @@ srt$stage <-
     Adult = c("P45")
   )
 srt$stage %<>% factor(levels = c("Embryonic", "Neonatal", "Pubertal", "Adult"), ordered = TRUE)
-DimPlot_scCustom(
+FeaturePlot_scCustom(
   srt,
   reduction = "ref.umap",
-  split.by = "stage",
-  repel = TRUE,
+  features = c(
+    "Oxt", 
+    "Avp", 
+    "Sst", 
+    "Crh", 
+    "Trh"), 
+  split.by = "stage", 
+  min.cutoff = 'q05',
+  na_cutoff = 2, 
+  label = F,
   num_columns = 4
-)
+  ) * NoLegend()
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/ref-embedding-split-stage-1.png){fig-align='center' fig-pos='H' width=6300}
+![](02-endo-cb_files/figure-html/ref-embedding-split-stage-kim2020-np-1.png){fig-align='center' width=5400}
+:::
+:::
+
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
+FeaturePlot_scCustom(
+  rar2020.srt.pub,
+  reduction = "umap",
+  features = c(
+    "Oxt", 
+    "Avp", 
+    "Sst", 
+    "Crh", 
+    "Trh"), 
+  split.by = "stage", 
+  min.cutoff = 'q05',
+  na_cutoff = 2, 
+  label = F,
+  num_columns = 4
+  ) * NoLegend()
+```
+
+::: {.cell-output-display}
+![](02-endo-cb_files/figure-html/ref-embedding-split-stage-romanov2020-np-1.png){fig-align='center' width=5400}
 :::
 :::
 
@@ -757,6 +797,7 @@ if (!file.exists(here(data_dir, "kim2020_pvn_neurons.txt"))) {
 }
 selected_cells <- read_lines(here(data_dir, "kim2020_pvn_neurons.txt"))
 srt <- subset(srt, cells = selected_cells)
+srt <- subset(srt, subset = refUMAP_1 > 4 & refUMAP_2 > -1)
 
 srt@meta.data <- srt@meta.data |> rename(wtree = predicted.id, age = Age)
 
@@ -766,7 +807,7 @@ srt
 ::: {.cell-output .cell-output-stdout}
 ```
 An object of class Seurat 
-27998 features across 4566 samples within 1 assay 
+27998 features across 4555 samples within 1 assay 
 Active assay: RNA (27998 features, 3000 variable features)
  3 layers present: counts, data, scale.data
  3 dimensional reductions calculated: umap, ref.pca, ref.umap
@@ -775,21 +816,32 @@ Active assay: RNA (27998 features, 3000 variable features)
 :::
 
 
-
 ## Intersection sets analysis
 
 ### PVN Neurons from Kim et al. 2020, Nature Communications
 
 
-
 ::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
-FeaturePlot_scCustom(srt, reduction = "ref.umap", features = c("Oxt", "Avp", "Sst", "Crh", "Trh"), split.by = "stage", label = F, num_columns = 4) * NoLegend()
+FeaturePlot_scCustom(
+  srt,
+  reduction = "ref.umap",
+  features = c(
+    "Oxt", 
+    "Avp", 
+    "Sst", 
+    "Crh", 
+    "Trh"), 
+  split.by = "stage", 
+  na_cutoff = 2, 
+  label = F,
+  num_columns = 4
+  ) * NoLegend()
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/plot-reference-umap-transfered-genes-split-by-stages-1.png){fig-align='center' fig-pos='H' width=5400}
+![](02-endo-cb_files/figure-html/plot-kim2020-pvn-feature-np-split-by-stages-1.png){fig-align='center' width=5400}
 :::
 :::
 
@@ -800,7 +852,7 @@ FeaturePlot_scCustom(srt, reduction = "ref.umap", features = c(cnbn), split.by =
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/plot-reference-umap-feature-cb-split-by-stages-1.png){fig-align='center' fig-pos='H' width=5400}
+![](02-endo-cb_files/figure-html/plot-kim2020-pvn-feature-cb-split-by-stages-1.png){fig-align='center' width=5400}
 :::
 :::
 
@@ -844,9 +896,7 @@ content_sbs_mtx_kim <-
 :::
 
 
-
 #### All
-
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -870,14 +920,12 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-kim2020-pvn-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-kim2020-pvn-1.png){fig-align='center' width=4200}
 :::
 :::
-
 
 
 #### Embryonic
-
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -905,14 +953,12 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-kim2020-pvn-Embryonic-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-kim2020-pvn-Embryonic-1.png){fig-align='center' width=4200}
 :::
 :::
-
 
 
 #### Neonatal
-
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -942,14 +988,12 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-kim2020-pvn-Neonatal-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-kim2020-pvn-Neonatal-1.png){fig-align='center' width=4200}
 :::
 :::
-
 
 
 #### Pubertal
-
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -979,14 +1023,12 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-kim2020-pvn-Pubertal-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-kim2020-pvn-Pubertal-1.png){fig-align='center' width=4200}
 :::
 :::
-
 
 
 #### Adult
-
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -1016,15 +1058,61 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-kim2020-pvn-Adult-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-kim2020-pvn-Adult-1.png){fig-align='center' width=4200}
 :::
 :::
-
 
 
 ### PVN Neurons from Romanov et al. 2020, Nature
 
 
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
+rar2020.srt.pvn <-
+  subset(
+    x = rar2020.srt.pub,
+    idents = c(
+      "mneOXY", "mneVAS",
+      "pneSS", "pneCRH", "pneTRH"
+    ),
+    invert = FALSE
+  )
+
+rar2020.srt.pvn <- subset(rar2020.srt.pvn, subset = umap_1 > 4 & umap_2 > -1)
+
+rar2020.srt.pvn$age <-
+  plyr::mapvalues(
+    x = rar2020.srt.pvn$age,
+    from = c("E15", "E17", "P0", "P2", "3P2", "1P10", "P10", "P23"),
+    to = c("E15", "E17", "P00", "P02", "P02", "P10", "P10", "P23")
+  )
+```
+:::
+
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
+FeaturePlot_scCustom(
+  rar2020.srt.pvn,
+  reduction = "umap",
+  features = c(
+    "Oxt", 
+    "Avp", 
+    "Sst", 
+    "Crh", 
+    "Trh"), 
+  split.by = "stage", 
+  na_cutoff = 2, 
+  label = F,
+  num_columns = 4
+  ) * NoLegend()
+```
+
+::: {.cell-output-display}
+![](02-endo-cb_files/figure-html/plot-romanov2020-pvn-feature-np-split-by-stages-1.png){fig-align='center' width=5400}
+:::
+:::
 
 ::: {.cell layout-align="center"}
 
@@ -1033,7 +1121,7 @@ FeaturePlot_scCustom(rar2020.srt.pvn, reduction = "umap", features = c(cnbn), sp
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/plot-romanov2020-pvn-feature-cb-split-by-stages-1.png){fig-align='center' fig-pos='H' width=5400}
+![](02-endo-cb_files/figure-html/plot-romanov2020-pvn-feature-cb-split-by-stages-1.png){fig-align='center' width=5400}
 :::
 :::
 
@@ -1054,7 +1142,7 @@ FeaturePlot(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/plot-feature-cb-romanov2020-pvn-1.png){fig-align='center' fig-pos='H' width=5400}
+![](02-endo-cb_files/figure-html/plot-feature-cb-romanov2020-pvn-1.png){fig-align='center' width=5400}
 :::
 :::
 
@@ -1095,9 +1183,7 @@ content_sbs_mtx_romanov <-
 :::
 
 
-
 #### All
-
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -1120,14 +1206,12 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-romanov2020-pvn-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-1.png){fig-align='center' width=4200}
 :::
 :::
-
 
 
 #### Embryonic
-
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -1156,14 +1240,12 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-romanov2020-pvn-Embryonic-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-Embryonic-1.png){fig-align='center' width=4200}
 :::
 :::
-
 
 
 #### Neonatal
-
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -1192,14 +1274,12 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-romanov2020-pvn-Neonatal-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-Neonatal-1.png){fig-align='center' width=4200}
 :::
 :::
-
 
 
 #### Pubertal
-
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -1228,14 +1308,12 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-romanov2020-pvn-Pubertal-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-Pubertal-1.png){fig-align='center' width=4200}
 :::
 :::
-
 
 
 #### Adult
-
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -1264,14 +1342,12 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-romanov2020-pvn-Adult-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-Adult-1.png){fig-align='center' width=4200}
 :::
 :::
-
 
 
 ### PVN Neurons from both datasets joined
-
 
 
 ::: {.cell layout-align="center"}
@@ -1292,9 +1368,7 @@ content_sbs_mtx <-
 :::
 
 
-
 #### All
-
 
 
 ::: {.cell layout-align="center" fig.asp='1.214'}
@@ -1318,16 +1392,14 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-1.png){fig-align='center' width=4200}
 :::
 :::
-
 
 
 #### Embryonic
 
 
-
 ::: {.cell layout-align="center" fig.asp='1.214'}
 
 ```{.r .cell-code}
@@ -1354,7 +1426,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Embryonic-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Embryonic-1.png){fig-align='center' width=4200}
 :::
 :::
 
@@ -1384,7 +1456,43 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Embryonic-f2-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Embryonic-f2-1.png){fig-align='center' width=4200}
+:::
+
+```{.r .cell-code}
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Embryonic") |>
+      select(
+        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
+```
+
+::: {.cell-output-display}
+Table: Data summary
+
+|                         |                   |
+|:------------------------|:------------------|
+|Name                     |as.data.frame(...) |
+|Number of rows           |3771               |
+|Number of columns        |5                  |
+|_______________________  |                   |
+|Column type frequency:   |                   |
+|numeric                  |5                  |
+|________________________ |                   |
+|Group variables          |None               |
+
+
+**Variable type: numeric**
+
+|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
+|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
+|Cnr1          |         0|             1| 0.09| 0.28|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Gpr55         |         0|             1| 0.00| 0.03|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oxt           |         0|             1| 0.02| 0.15|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Crh           |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Trh           |         0|             1| 0.03| 0.17|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 :::
 :::
 
@@ -1414,7 +1522,44 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Embryonic-f3-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Embryonic-f3-1.png){fig-align='center' width=4200}
+:::
+
+```{.r .cell-code}
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Embryonic") |>
+      select(
+        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
+```
+
+::: {.cell-output-display}
+Table: Data summary
+
+|                         |                   |
+|:------------------------|:------------------|
+|Name                     |as.data.frame(...) |
+|Number of rows           |3771               |
+|Number of columns        |6                  |
+|_______________________  |                   |
+|Column type frequency:   |                   |
+|numeric                  |6                  |
+|________________________ |                   |
+|Group variables          |None               |
+
+
+**Variable type: numeric**
+
+|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
+|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
+|Dagla         |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Daglb         |         0|             1| 0.02| 0.15|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Mgll          |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oxt           |         0|             1| 0.02| 0.15|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Crh           |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Trh           |         0|             1| 0.03| 0.17|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 :::
 :::
 
@@ -1444,16 +1589,51 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Embryonic-f4-1.png){fig-align='center' fig-pos='H' width=4200}
-:::
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Embryonic-f4-1.png){fig-align='center' width=4200}
 :::
 
+```{.r .cell-code}
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Embryonic") |>
+      select(
+        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
+```
+
+::: {.cell-output-display}
+Table: Data summary
+
+|                         |                   |
+|:------------------------|:------------------|
+|Name                     |as.data.frame(...) |
+|Number of rows           |3771               |
+|Number of columns        |6                  |
+|_______________________  |                   |
+|Column type frequency:   |                   |
+|numeric                  |6                  |
+|________________________ |                   |
+|Group variables          |None               |
+
+
+**Variable type: numeric**
+
+|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
+|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
+|Napepld       |         0|             1| 0.01| 0.08|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Gde1          |         0|             1| 0.11| 0.31|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Faah          |         0|             1| 0.02| 0.12|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oxt           |         0|             1| 0.02| 0.15|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Crh           |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Trh           |         0|             1| 0.03| 0.17|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+:::
+:::
 
 
 #### Neonatal
 
 
-
 ::: {.cell layout-align="center" fig.asp='1.214'}
 
 ```{.r .cell-code}
@@ -1480,7 +1660,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Neonatal-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Neonatal-1.png){fig-align='center' width=4200}
 :::
 :::
 
@@ -1510,7 +1690,43 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Neonatal-f2-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Neonatal-f2-1.png){fig-align='center' width=4200}
+:::
+
+```{.r .cell-code}
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Neonatal") |>
+      select(
+        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
+```
+
+::: {.cell-output-display}
+Table: Data summary
+
+|                         |                   |
+|:------------------------|:------------------|
+|Name                     |as.data.frame(...) |
+|Number of rows           |1456               |
+|Number of columns        |5                  |
+|_______________________  |                   |
+|Column type frequency:   |                   |
+|numeric                  |5                  |
+|________________________ |                   |
+|Group variables          |None               |
+
+
+**Variable type: numeric**
+
+|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
+|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
+|Cnr1          |         0|             1| 0.12| 0.33|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Gpr55         |         0|             1| 0.00| 0.03|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Crh           |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Trh           |         0|             1| 0.06| 0.24|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 :::
 :::
 
@@ -1540,7 +1756,44 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Neonatal-f3-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Neonatal-f3-1.png){fig-align='center' width=4200}
+:::
+
+```{.r .cell-code}
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Neonatal") |>
+      select(
+        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
+```
+
+::: {.cell-output-display}
+Table: Data summary
+
+|                         |                   |
+|:------------------------|:------------------|
+|Name                     |as.data.frame(...) |
+|Number of rows           |1456               |
+|Number of columns        |6                  |
+|_______________________  |                   |
+|Column type frequency:   |                   |
+|numeric                  |6                  |
+|________________________ |                   |
+|Group variables          |None               |
+
+
+**Variable type: numeric**
+
+|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
+|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
+|Dagla         |         0|             1| 0.05| 0.22|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Daglb         |         0|             1| 0.02| 0.15|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Mgll          |         0|             1| 0.03| 0.17|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Crh           |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Trh           |         0|             1| 0.06| 0.24|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 :::
 :::
 
@@ -1570,16 +1823,51 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Neonatal-f4-1.png){fig-align='center' fig-pos='H' width=4200}
-:::
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Neonatal-f4-1.png){fig-align='center' width=4200}
 :::
 
+```{.r .cell-code}
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Neonatal") |>
+      select(
+        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
+```
+
+::: {.cell-output-display}
+Table: Data summary
+
+|                         |                   |
+|:------------------------|:------------------|
+|Name                     |as.data.frame(...) |
+|Number of rows           |1456               |
+|Number of columns        |6                  |
+|_______________________  |                   |
+|Column type frequency:   |                   |
+|numeric                  |6                  |
+|________________________ |                   |
+|Group variables          |None               |
+
+
+**Variable type: numeric**
+
+|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
+|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
+|Napepld       |         0|             1| 0.00| 0.07|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Gde1          |         0|             1| 0.12| 0.33|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Faah          |         0|             1| 0.04| 0.19|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Crh           |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Trh           |         0|             1| 0.06| 0.24|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+:::
+:::
 
 
 #### Pubertal
 
 
-
 ::: {.cell layout-align="center" fig.asp='1.214'}
 
 ```{.r .cell-code}
@@ -1606,7 +1894,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Pubertal-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Pubertal-1.png){fig-align='center' width=4200}
 :::
 :::
 
@@ -1636,7 +1924,43 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Pubertal-f2-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Pubertal-f2-1.png){fig-align='center' width=4200}
+:::
+
+```{.r .cell-code}
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Pubertal") |>
+      select(
+        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
+```
+
+::: {.cell-output-display}
+Table: Data summary
+
+|                         |                   |
+|:------------------------|:------------------|
+|Name                     |as.data.frame(...) |
+|Number of rows           |641                |
+|Number of columns        |5                  |
+|_______________________  |                   |
+|Column type frequency:   |                   |
+|numeric                  |5                  |
+|________________________ |                   |
+|Group variables          |None               |
+
+
+**Variable type: numeric**
+
+|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
+|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
+|Cnr1          |         0|             1| 0.24| 0.43|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Gpr55         |         0|             1| 0.01| 0.12|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Crh           |         0|             1| 0.05| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Trh           |         0|             1| 0.35| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
 :::
 :::
 
@@ -1666,7 +1990,44 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Pubertal-f3-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Pubertal-f3-1.png){fig-align='center' width=4200}
+:::
+
+```{.r .cell-code}
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Pubertal") |>
+      select(
+        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
+```
+
+::: {.cell-output-display}
+Table: Data summary
+
+|                         |                   |
+|:------------------------|:------------------|
+|Name                     |as.data.frame(...) |
+|Number of rows           |641                |
+|Number of columns        |6                  |
+|_______________________  |                   |
+|Column type frequency:   |                   |
+|numeric                  |6                  |
+|________________________ |                   |
+|Group variables          |None               |
+
+
+**Variable type: numeric**
+
+|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
+|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
+|Dagla         |         0|             1| 0.13| 0.34|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Daglb         |         0|             1| 0.08| 0.28|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Mgll          |         0|             1| 0.06| 0.23|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Crh           |         0|             1| 0.05| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Trh           |         0|             1| 0.35| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
 :::
 :::
 
@@ -1696,16 +2057,51 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Pubertal-f4-1.png){fig-align='center' fig-pos='H' width=4200}
-:::
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Pubertal-f4-1.png){fig-align='center' width=4200}
 :::
 
+```{.r .cell-code}
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Pubertal") |>
+      select(
+        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
+```
+
+::: {.cell-output-display}
+Table: Data summary
+
+|                         |                   |
+|:------------------------|:------------------|
+|Name                     |as.data.frame(...) |
+|Number of rows           |641                |
+|Number of columns        |6                  |
+|_______________________  |                   |
+|Column type frequency:   |                   |
+|numeric                  |6                  |
+|________________________ |                   |
+|Group variables          |None               |
+
+
+**Variable type: numeric**
+
+|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
+|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
+|Napepld       |         0|             1| 0.04| 0.19|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Gde1          |         0|             1| 0.53| 0.50|  0|   0|   1|   1|    1|▇▁▁▁▇ |
+|Faah          |         0|             1| 0.11| 0.32|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Crh           |         0|             1| 0.05| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Trh           |         0|             1| 0.35| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+:::
+:::
 
 
 #### Adult
 
 
-
 ::: {.cell layout-align="center" fig.asp='1.214'}
 
 ```{.r .cell-code}
@@ -1732,7 +2128,7 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Adult-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-1.png){fig-align='center' width=4200}
 :::
 :::
 
@@ -1762,7 +2158,43 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Adult-f2-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f2-1.png){fig-align='center' width=4200}
+:::
+
+```{.r .cell-code}
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Adult") |>
+      select(
+        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
+```
+
+::: {.cell-output-display}
+Table: Data summary
+
+|                         |                   |
+|:------------------------|:------------------|
+|Name                     |as.data.frame(...) |
+|Number of rows           |801                |
+|Number of columns        |5                  |
+|_______________________  |                   |
+|Column type frequency:   |                   |
+|numeric                  |5                  |
+|________________________ |                   |
+|Group variables          |None               |
+
+
+**Variable type: numeric**
+
+|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
+|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
+|Cnr1          |         0|             1| 0.11| 0.31|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Gpr55         |         0|             1| 0.00| 0.05|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oxt           |         0|             1| 0.40| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Crh           |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Trh           |         0|             1| 0.10| 0.30|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 :::
 :::
 
@@ -1792,7 +2224,44 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Adult-f3-1.png){fig-align='center' fig-pos='H' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f3-1.png){fig-align='center' width=4200}
+:::
+
+```{.r .cell-code}
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Adult") |>
+      select(
+        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
+```
+
+::: {.cell-output-display}
+Table: Data summary
+
+|                         |                   |
+|:------------------------|:------------------|
+|Name                     |as.data.frame(...) |
+|Number of rows           |801                |
+|Number of columns        |6                  |
+|_______________________  |                   |
+|Column type frequency:   |                   |
+|numeric                  |6                  |
+|________________________ |                   |
+|Group variables          |None               |
+
+
+**Variable type: numeric**
+
+|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
+|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
+|Dagla         |         0|             1| 0.03| 0.16|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Daglb         |         0|             1| 0.06| 0.23|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Mgll          |         0|             1| 0.04| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oxt           |         0|             1| 0.40| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Crh           |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Trh           |         0|             1| 0.10| 0.30|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 :::
 :::
 
@@ -1822,14 +2291,49 @@ upset(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/upset-group-e-cb-pvn-Adult-f4-1.png){fig-align='center' fig-pos='H' width=4200}
-:::
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f4-1.png){fig-align='center' width=4200}
 :::
 
+```{.r .cell-code}
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(stage == "Adult") |>
+      select(
+        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
+```
+
+::: {.cell-output-display}
+Table: Data summary
+
+|                         |                   |
+|:------------------------|:------------------|
+|Name                     |as.data.frame(...) |
+|Number of rows           |801                |
+|Number of columns        |6                  |
+|_______________________  |                   |
+|Column type frequency:   |                   |
+|numeric                  |6                  |
+|________________________ |                   |
+|Group variables          |None               |
+
+
+**Variable type: numeric**
+
+|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
+|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
+|Napepld       |         0|             1| 0.01| 0.11|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Gde1          |         0|             1| 0.18| 0.39|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Faah          |         0|             1| 0.04| 0.20|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oxt           |         0|             1| 0.40| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Crh           |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Trh           |         0|             1| 0.10| 0.30|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+:::
+:::
 
 
 ### Contingency tables
-
 
 
 ::: {.cell layout-align="center"}
@@ -1838,239 +2342,463 @@ upset(
 rar2020.srt.pvn$age %>% forcats::fct_count()
 ```
 
-::: {.cell-output .cell-output-stdout}
-```
-# A tibble: 6 x 2
-  f         n
-  <fct> <int>
-1 E15     332
-2 E17     609
-3 P00     368
-4 P02     378
-5 P10     447
-6 P23      67
-```
+::: {.cell-output-display}
+
+`````{=html}
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":["f"],"name":[1],"type":["fct"],"align":["left"]},{"label":["n"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"E15","2":"317"},{"1":"E17","2":"593"},{"1":"P00","2":"350"},{"1":"P02","2":"362"},{"1":"P10","2":"425"},{"1":"P23","2":"67"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+`````
+
 :::
 
 ```{.r .cell-code}
 rar2020.srt.pvn$stage %>% forcats::fct_count()
 ```
 
-::: {.cell-output .cell-output-stdout}
-```
-# A tibble: 4 x 2
-  f             n
-  <fct>     <int>
-1 Embryonic   941
-2 Neonatal    746
-3 Pubertal    447
-4 Adult        67
-```
+::: {.cell-output-display}
+
+`````{=html}
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":["f"],"name":[1],"type":["fct"],"align":["left"]},{"label":["n"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"Embryonic","2":"910"},{"1":"Neonatal","2":"712"},{"1":"Pubertal","2":"425"},{"1":"Adult","2":"67"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+`````
+
 :::
 
 ```{.r .cell-code}
 srt$age %>% forcats::fct_count()
 ```
 
-::: {.cell-output .cell-output-stdout}
-```
-# A tibble: 12 x 2
-   f         n
-   <fct> <int>
- 1 E10      22
- 2 E11     169
- 3 E12     374
- 4 E13     292
- 5 E14     541
- 6 E15     445
- 7 E16     657
- 8 E18     369
- 9 P14     216
-10 P4      199
-11 P45     737
-12 P8      545
-```
+::: {.cell-output-display}
+
+`````{=html}
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":["f"],"name":[1],"type":["fct"],"align":["left"]},{"label":["n"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"E10","2":"22"},{"1":"E11","2":"168"},{"1":"E12","2":"374"},{"1":"E13","2":"290"},{"1":"E14","2":"540"},{"1":"E15","2":"444"},{"1":"E16","2":"655"},{"1":"E18","2":"368"},{"1":"P14","2":"216"},{"1":"P4","2":"199"},{"1":"P45","2":"734"},{"1":"P8","2":"545"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+`````
+
 :::
 
 ```{.r .cell-code}
 srt$stage %>% forcats::fct_count()
 ```
 
-::: {.cell-output .cell-output-stdout}
-```
-# A tibble: 4 x 2
-  f             n
-  <fct>     <int>
-1 Embryonic  2869
-2 Neonatal    744
-3 Pubertal    216
-4 Adult       737
-```
-:::
-:::
-
-
-
-## Integration of PVN neurons from both datasets
-
-
-
-::: {.cell layout-align="center"}
-
-:::
-
-::: {.cell layout-align="center"}
-::: {.cell-output .cell-output-stdout}
-```
-[1] 1
-```
-:::
-
-::: {.cell-output .cell-output-stdout}
-```
-[1] 2
-```
-:::
-
-::: {.cell-output .cell-output-stdout}
-```
-[1] 3
-```
-:::
-
-::: {.cell-output .cell-output-stdout}
-```
-[1] 4
-```
-:::
-
-::: {.cell-output .cell-output-stdout}
-```
-[1] 5
-```
-:::
-
-::: {.cell-output .cell-output-stdout}
-```
-[1] 6
-```
-:::
-
-::: {.cell-output .cell-output-stdout}
-```
-[1] 7
-```
-:::
-
-::: {.cell-output .cell-output-stdout}
-```
-[1] 8
-```
-:::
-:::
-
-::: {.cell layout-align="center" fig.asp='0.309'}
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/plot-integrated-pvn-neurons-1.png){fig-align='center' width=4200}
+
+`````{=html}
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":["f"],"name":[1],"type":["fct"],"align":["left"]},{"label":["n"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"Embryonic","2":"2861"},{"1":"Neonatal","2":"744"},{"1":"Pubertal","2":"216"},{"1":"Adult","2":"734"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+`````
+
 :::
 :::
+
+
+## Load selected astrocytes data from Lopez JP et al (2021)
+
 
 ::: {.cell layout-align="center"}
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/plot-integrated-pvn-split-1.png){fig-align='center' width=2700}
+
+```{.r .cell-code}
+anndata <- sc$read(here(
+  "../1_heteroAstrocytes/PRJNA679294/data/",
+  "class_cello/PRJNA679294-whole_dataset-0.001-cello_annotation.h5ad"
+))
+```
 :::
-:::
+
+
+### Convert adata object to R AnnDataR6 object.
 
 ::: {.cell layout-align="center"}
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/plot-integrated-pvn-clusters-1.png){fig-align='center' width=4200}
-:::
+
+```{.r .cell-code}
+adata <- py_to_r(anndata)
+class(adata)
+```
+
+::: {.cell-output .cell-output-stdout}
+```
+[1] "AnnDataR6" "R6"       
+```
 :::
 
-::: {.cell layout-align="center"}
+```{.r .cell-code}
+class(adata$X)
+```
 
+::: {.cell-output .cell-output-stdout}
+```
+[1] "dgCMatrix"
+attr(,"package")
+[1] "Matrix"
+```
+:::
+
+```{.r .cell-code}
+adata
+```
+
+::: {.cell-output .cell-output-stdout}
+```
+AnnData object with n_obs × n_vars = 9572 × 22835
+    obs: 'nCount_RAW', 'nFeature_RAW', 'nCount_RNA', 'nFeature_RNA', 'orig.ident', 'nFeature_Diff', 'nCount_Diff', 'percent_mito', 'percent_ribo', 'percent_mito_ribo', 'percent_hb', 'log10GenesPerUMI', 'cell_name', 'barcode', 'latent_RT_efficiency', 'latent_cell_probability', 'latent_scale', 'doublet_score', 'predicted_doublets', 'QC', 'var_regex', 'RNA_snn_res.0.5', 'RNA_snn_res.0.741576329532297', 'RNA_snn_res.1.24913691074005', 'RNA_snn_res.3.000001', 'seurat_clusters', 'k_tree', 'comb_clstr1', 'S.Score', 'G2M.Score', 'Phase', 'nCount_SCT', 'nFeature_SCT', 'SCT_snn_res.1', 'SCT_snn_res.1.1014548330962', 'SCT_snn_res.1.22223389211258', 'SCT_snn_res.1.36843938820807', 'SCT_snn_res.1.54904506877152', 'SCT_snn_res.1.7778105049838', 'SCT_snn_res.2.07696233957953', 'SCT_snn_res.2.48489124123347', 'SCT_snn_res.3.07411084005006', 'SCT_snn_res.4.00000100000002', 'bioproject', 'project', 'model', 'tech', 'region', 'sex', 'stage', 'libname', 'expbtch', 'condit', 'ora_celltype'
+    var: 'vst.mean', 'vst.variance', 'vst.variance.expected', 'vst.variance.standardized', 'vst.variable'
+    uns: 'k_tree_colors', 'name', 'ora_celltype_colors'
+    obsm: 'X_pacmap', 'X_pca', 'X_umap', 'ora_estimate', 'ora_pvals'
+```
+:::
 :::
 
 ::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
-FeaturePlot(
-  srt.pvn.integr,
-  features = c(cnbn),
-  label = T,
-  blend = F,
-  order = TRUE,
-  pt.size = 1.2,
-  raster.dpi = c(1024, 1024),
-  alpha = 0.5,
-  split.by = "stage"
+expr_mtx <- t(as.matrix(adata$raw$X))
+colnames(expr_mtx) <- rownames(adata$X)
+rownames(expr_mtx) <- adata$var_names
+srt <- CreateSeuratObject(
+  expr_mtx,
+  assay = "RNA",
+  project = "individual_hypothalamic_nuclei_astrocytes_evaluation_dataset",
+  meta.data = as.data.frame(adata$obs)
+)
+
+Idents(srt) <- "ora_celltype"
+srt <- subset(srt, idents = c("Astrocytes"))
+
+Idents(srt) <- "libname"
+
+print(srt)
+```
+
+::: {.cell-output .cell-output-stdout}
+```
+An object of class Seurat 
+22835 features across 2838 samples within 1 assay 
+Active assay: RNA (22835 features, 0 variable features)
+ 1 layer present: counts
+```
+:::
+
+```{.r .cell-code}
+rm(adata, anndata, expr_mtx)
+invisible(gc())
+```
+:::
+
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
+srt <- NormalizeData(srt)
+srt <- FindVariableFeatures(srt, selection.method = "vst", nfeatures = 5000)
+all.genes <- rownames(srt)
+srt <- ScaleData(srt, features = c(VariableFeatures(srt), cnbn))
+```
+:::
+
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
+srt <- RunPCA(srt, npcs = 50, verbose = FALSE)
+srt <-
+  srt |>
+  FindNeighbors(
+    dims = 1:40,
+    k.param = 40,
+    annoy.metric = "cosine",
+    n.trees = 100,
+    verbose = FALSE
+  ) |>
+  RunUMAP(
+    dims = 1:50,
+    reduction.name = "umap",
+    reduction.key = "UMAP_",
+    return.model = F,
+    n.epochs = 1000L,
+    n.neighbors = 50,
+    min.dist = 0.5,
+    metric = "cosine",
+    seed.use = reseed,
+    verbose = FALSE
+  )
+```
+:::
+
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
+DimPlot(srt)
+```
+
+::: {.cell-output-display}
+![](02-endo-cb_files/figure-html/plot-lopez2021-pvn-condit-astro-1.png){fig-align='center' width=1800}
+:::
+:::
+
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
+FeaturePlot_scCustom(
+  srt,
+  reduction = "umap",
+  features = c(
+    "Cnr1", "Cnr2", "Gpr55", "Slc1a3",
+    "Dagla", "Daglb", "Mgll", "Gfap",
+    "Napepld", "Gde1", "Faah", "Aldh1l1"
+    ),
+  label = F,
+  num_columns = 4
+) * NoLegend()
+```
+
+::: {.cell-output-display}
+![](02-endo-cb_files/figure-html/plot-lopez2021-pvn-feature-cb-1.png){fig-align='center' width=5400}
+:::
+:::
+
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
+sbs_mtx <-
+  srt@assays$RNA@layers$data %>%
+  as.data.frame() %>%
+  t()
+
+rownames(sbs_mtx) <- colnames(srt)
+colnames(sbs_mtx) <- rownames(srt)
+
+# Filter features
+filt_low_genes <-
+  colSums(sbs_mtx) %>%
+  .[. > quantile(., 0.4)] %>%
+  names()
+sbs_mtx %<>% .[, filt_low_genes]
+
+min_filt_vector2 <-
+  sbs_mtx %>%
+  as_tibble() %>%
+  select(all_of(filt_low_genes)) %>%
+  summarise(across(.fns = ~ quantile(.x, .005))) %>%
+  as.list() %>%
+  map(as.double) %>%
+  simplify() %>%
+  .[filt_low_genes]
+
+# Prepare table of intersection sets analysis
+content_sbs_mtx <-
+  (sbs_mtx > min_filt_vector2) %>%
+  as_tibble() %>%
+  mutate_all(as.numeric) %>%
+  bind_cols(
+    srt@meta.data |> select(condit)
+  )
+```
+:::
+
+::: {.cell layout-align="center" fig.asp='1.214'}
+
+```{.r .cell-code}
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(condit == 0) |>
+      select(
+        c("Cnr1", "Cnr2", "Gpr55", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Cnr1", "Cnr2", "Gpr55", "Slc1a3", "Gfap", "Aldh1l1") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
 )
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/plot-feature-cb-pvn-both-1.png){fig-align='center' fig-pos='H' width=9600}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f2-astro-norm-1.png){fig-align='center' width=4200}
 :::
-:::
-
-::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
-# Idents(srt.pvn.integr) <- factor(srt.pvn.integr$wtree)
-# all_markers_pvn_wtree_final <- FindAllMarkers(srt.pvn.integr,
-#   assay = "SCT",
-#   test.use = "wilcox",
-#   logfc.threshold = 0.05,
-#   min.pct = 0.05,
-#   random.seed = reseed,
-#   return.thresh = 0.01
-# )
-# 
-# all_markers_pvn_wtree_final %>%
-#   group_by(cluster) %>%
-#   filter(p_val_adj < 0.01) %>%
-#   slice_max(n = 4, order_by = avg_logFC)
-# 
-# readr::write_csv(all_markers_wtree_final,
-#   path = here::here(
-#     tables_dir,
-#     "all-markers_pvn_wilcox-test-sct.csv"
-#   )
-# )
-# 
-# all_markers_pvn_wtree_final <-
-#   readr::read_csv(here::here(
-#     tables_dir,
-#     "all-markers_pvn_wilcox-test-sct.csv"
-#   ))
-```
-:::
-
-
-
-
-# Dotplots
-
-
-
-::: {.cell layout-align="center"}
-
-```{.r .cell-code}
-goi <- c(cnbn)
-Idents(srt) <- "age"
-
-DotPlot_scCustom(seurat_object = srt.pvn.integr, colors_use = viridis(n = 30, alpha = .75, direction = -1, option = "E"), features = goi[goi %in% rownames(srt)], flip_axes = T, x_lab_rotate = TRUE, dot.scale = 15)
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(condit == 0) |>
+      select(
+        c("Cnr1", "Cnr2", "Gpr55", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/plt-dotplot-dendrogram-genes-npr-1.png){fig-align='center' fig-pos='H' width=1800}
+Table: Data summary
+
+|                         |                   |
+|:------------------------|:------------------|
+|Name                     |as.data.frame(...) |
+|Number of rows           |1392               |
+|Number of columns        |3                  |
+|_______________________  |                   |
+|Column type frequency:   |                   |
+|numeric                  |3                  |
+|________________________ |                   |
+|Group variables          |None               |
+
+
+**Variable type: numeric**
+
+|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
+|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
+|Slc1a3        |         0|             1| 0.98| 0.14|  0|   1|   1|   1|    1|▁▁▁▁▇ |
+|Gfap          |         0|             1| 0.24| 0.43|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Aldh1l1       |         0|             1| 0.23| 0.42|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+:::
 :::
 
+::: {.cell layout-align="center" fig.asp='1.214'}
+
 ```{.r .cell-code}
-DotPlot(srt, features = goi[goi %in% rownames(srt)], dot.scale = 15)
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(condit == 0) |>
+      select(
+        c("Dagla", "Daglb", "Mgll", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Dagla", "Daglb", "Mgll", "Slc1a3", "Gfap", "Aldh1l1") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-pdf/plt-dotplot-dendrogram-genes-npr-2.png){fig-align='center' fig-pos='H' width=1800}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f3-astro-norm-1.png){fig-align='center' width=4200}
+:::
+
+```{.r .cell-code}
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(condit == 0) |>
+      select(
+        c("Dagla", "Daglb", "Mgll", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
+```
+
+::: {.cell-output-display}
+Table: Data summary
+
+|                         |                   |
+|:------------------------|:------------------|
+|Name                     |as.data.frame(...) |
+|Number of rows           |1392               |
+|Number of columns        |6                  |
+|_______________________  |                   |
+|Column type frequency:   |                   |
+|numeric                  |6                  |
+|________________________ |                   |
+|Group variables          |None               |
+
+
+**Variable type: numeric**
+
+|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
+|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
+|Dagla         |         0|             1| 0.05| 0.22|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Daglb         |         0|             1| 0.09| 0.28|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Mgll          |         0|             1| 0.23| 0.42|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Slc1a3        |         0|             1| 0.98| 0.14|  0|   1|   1|   1|    1|▁▁▁▁▇ |
+|Gfap          |         0|             1| 0.24| 0.43|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Aldh1l1       |         0|             1| 0.23| 0.42|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+:::
+:::
+
+::: {.cell layout-align="center" fig.asp='1.214'}
+
+```{.r .cell-code}
+upset(
+  as.data.frame(
+    content_sbs_mtx |>
+      filter(condit == 0) |>
+      select(
+        c("Napepld", "Gde1", "Faah", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ),
+  order.by = "freq",
+  cutoff = 3,
+  sets.x.label = "Number of cells",
+  number.angles = 0,
+  point.size = 3.5, line.size = 2,
+  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
+  nsets = 30,
+  nintersects = 30,
+  sets = c("Napepld", "Gde1", "Faah", "Slc1a3", "Gfap", "Aldh1l1") %>%
+    .[. %in% colnames(content_sbs_mtx)],
+  empty.intersections = NULL
+)
+```
+
+::: {.cell-output-display}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f4-astro-norm-1.png){fig-align='center' width=4200}
+:::
+
+```{.r .cell-code}
+skim(as.data.frame(
+    content_sbs_mtx |>
+      filter(condit == 0) |>
+      select(
+        c("Napepld", "Gde1", "Faah", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
+      )
+  ))
+```
+
+::: {.cell-output-display}
+Table: Data summary
+
+|                         |                   |
+|:------------------------|:------------------|
+|Name                     |as.data.frame(...) |
+|Number of rows           |1392               |
+|Number of columns        |5                  |
+|_______________________  |                   |
+|Column type frequency:   |                   |
+|numeric                  |5                  |
+|________________________ |                   |
+|Group variables          |None               |
+
+
+**Variable type: numeric**
+
+|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
+|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
+|Napepld       |         0|             1| 0.02| 0.14|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Gde1          |         0|             1| 0.19| 0.39|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Slc1a3        |         0|             1| 0.98| 0.14|  0|   1|   1|   1|    1|▁▁▁▁▇ |
+|Gfap          |         0|             1| 0.24| 0.43|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Aldh1l1       |         0|             1| 0.23| 0.42|  0|   0|   0|   0|    1|▇▁▁▁▂ |
 :::
 :::
 
@@ -2082,7 +2810,7 @@ sessioninfo::session_info()
 
 ::: {.cell-output .cell-output-stdout}
 ```
-- Session info ---------------------------------------------------------------
+─ Session info ───────────────────────────────────────────────────────────────
  setting  value
  version  R version 4.4.0 (2024-04-24)
  os       Ubuntu 22.04.4 LTS
@@ -2092,213 +2820,188 @@ sessioninfo::session_info()
  collate  en_US.UTF-8
  ctype    en_US.UTF-8
  tz       Etc/UTC
- date     2024-11-19
+ date     2024-11-26
  pandoc   3.2 @ /opt/python/3.8.8/bin/ (via rmarkdown)
 
-- Packages -------------------------------------------------------------------
- package              * version     date (UTC) lib source
- abind                  1.4-8       2024-09-12 [2] RSPM (R 4.4.0)
- anndata              * 0.7.5.6     2023-03-17 [2] RSPM (R 4.4.0)
- assertthat             0.2.1       2019-03-21 [2] RSPM (R 4.4.0)
- base64enc              0.1-3       2015-07-28 [2] RSPM (R 4.4.0)
- bayestestR             0.13.2      2024-02-12 [2] RSPM (R 4.4.0)
- beeswarm               0.4.0       2021-06-01 [2] RSPM (R 4.4.0)
- Biobase                2.64.0      2024-04-30 [2] RSPM (R 4.4.0)
- BiocGenerics           0.50.0      2024-04-30 [2] RSPM (R 4.4.0)
- BiocManager            1.30.23     2024-05-04 [2] RSPM (R 4.4.0)
- bit                    4.0.5       2022-11-15 [2] RSPM (R 4.4.0)
- bit64                  4.0.5       2020-08-30 [2] RSPM (R 4.4.0)
- callr                  3.7.6       2024-03-25 [2] RSPM (R 4.4.0)
- circlize               0.4.16      2024-06-19 [2] Github (jokergoo/circlize@9b21578)
- cli                    3.6.3       2024-06-21 [2] RSPM (R 4.4.0)
- cluster                2.1.6       2023-12-01 [2] RSPM (R 4.4.0)
- coda                   0.19-4.1    2024-01-31 [2] RSPM (R 4.4.0)
- codetools              0.2-20      2024-03-31 [2] RSPM (R 4.4.0)
- colorspace             2.1-1       2024-07-26 [2] RSPM (R 4.4.0)
- correlation            0.8.5       2024-06-16 [2] RSPM (R 4.4.0)
- cowplot              * 1.1.3       2024-01-22 [2] RSPM (R 4.4.0)
- crayon                 1.5.3       2024-06-20 [2] RSPM (R 4.4.0)
- data.table             1.16.0      2024-08-27 [2] RSPM (R 4.4.0)
- datawizard             0.11.0      2024-06-05 [2] RSPM (R 4.4.0)
- DelayedArray           0.30.1      2024-05-07 [2] RSPM (R 4.4.0)
- deldir                 2.0-4       2024-02-28 [2] RSPM (R 4.4.0)
- digest                 0.6.37      2024-08-19 [2] RSPM (R 4.4.0)
- dotCall64              1.1-1       2023-11-28 [2] RSPM (R 4.4.0)
- dplyr                * 1.1.4       2023-11-17 [2] RSPM (R 4.4.0)
- effectsize             0.8.8       2024-05-12 [2] RSPM (R 4.4.0)
- emmeans                1.10.2      2024-05-20 [2] RSPM (R 4.4.0)
- estimability           1.5.1       2024-05-12 [2] RSPM (R 4.4.0)
- evaluate               1.0.0       2024-09-17 [2] RSPM (R 4.4.0)
- fansi                  1.0.6       2023-12-08 [2] RSPM (R 4.4.0)
- farver                 2.1.2       2024-05-13 [2] RSPM (R 4.4.0)
- fastDummies            1.7.4       2024-08-16 [2] RSPM (R 4.4.0)
- fastmap                1.2.0       2024-05-15 [2] RSPM (R 4.4.0)
- fitdistrplus           1.2-1       2024-07-12 [2] RSPM (R 4.4.0)
- forcats              * 1.0.0       2023-01-29 [2] RSPM (R 4.4.0)
- fs                     1.6.4       2024-04-25 [2] RSPM (R 4.4.0)
- future               * 1.34.0      2024-07-29 [2] RSPM (R 4.4.0)
- future.apply           1.11.2      2024-03-28 [2] RSPM (R 4.4.0)
- generics               0.1.3       2022-07-05 [2] RSPM (R 4.4.0)
- GenomeInfoDb           1.40.1      2024-05-24 [2] RSPM (R 4.4.0)
- GenomeInfoDbData       1.2.12      2024-06-19 [2] RSPM (R 4.4.0)
- GenomicRanges          1.56.1      2024-06-12 [2] RSPM (R 4.4.0)
- getPass                0.2-4       2023-12-10 [2] RSPM (R 4.4.0)
- ggbeeswarm             0.7.2       2024-06-19 [2] Github (eclarke/ggbeeswarm@ce2da8a)
- ggmin                  0.0.0.9000  2024-06-19 [2] Github (sjessa/ggmin@8ada274)
- ggplot2              * 3.5.1       2024-04-23 [2] RSPM (R 4.4.0)
- ggprism                1.0.5       2024-06-19 [2] Github (csdaw/ggprism@b6e6c0e)
- ggrastr                1.0.2       2024-06-19 [2] Github (VPetukhov/ggrastr@50ca3e0)
- ggrepel                0.9.6       2024-09-20 [2] Github (slowkow/ggrepel@e94776b)
- ggridges               0.5.6       2024-01-23 [2] RSPM (R 4.4.0)
- ggstatsplot          * 0.12.3.9000 2024-06-19 [2] Github (IndrajeetPatil/ggstatsplot@d55f86a)
- git2r                  0.33.0      2023-11-26 [2] RSPM (R 4.4.0)
- glmGamPoi              1.16.0      2024-04-30 [2] RSPM (R 4.4.0)
- GlobalOptions          0.1.2       2020-06-10 [2] RSPM (R 4.4.0)
- globals                0.16.3      2024-03-08 [2] RSPM (R 4.4.0)
- glue                   1.7.0       2024-01-09 [2] RSPM (R 4.4.0)
- goftest                1.2-3       2021-10-07 [2] RSPM (R 4.4.0)
- gridExtra              2.3         2017-09-09 [2] RSPM (R 4.4.0)
- gtable                 0.3.5       2024-04-22 [2] RSPM (R 4.4.0)
- hdf5r                  1.3.10      2024-03-02 [2] RSPM (R 4.4.0)
- here                 * 1.0.1       2020-12-13 [2] RSPM (R 4.4.0)
- hms                    1.1.3       2023-03-21 [2] RSPM (R 4.4.0)
- htmltools              0.5.8.1     2024-04-04 [2] RSPM (R 4.4.0)
- htmlwidgets            1.6.4       2023-12-06 [2] RSPM (R 4.4.0)
- httpuv                 1.6.15      2024-03-26 [2] RSPM (R 4.4.0)
- httr                   1.4.7       2023-08-15 [2] RSPM (R 4.4.0)
- ica                    1.0-3       2022-07-08 [2] RSPM (R 4.4.0)
- igraph                 2.0.3       2024-03-13 [2] RSPM (R 4.4.0)
- insight                0.20.1      2024-06-11 [2] RSPM (R 4.4.0)
- IRanges                2.38.0      2024-04-30 [2] RSPM (R 4.4.0)
- irlba                  2.3.5.1     2022-10-03 [2] RSPM (R 4.4.0)
- janitor                2.2.0.9000  2024-06-19 [2] Github (sfirke/janitor@80cd1eb)
- jsonlite               1.8.8       2023-12-04 [2] RSPM (R 4.4.0)
- KernSmooth             2.23-24     2024-05-17 [2] RSPM (R 4.4.0)
- knitr                  1.48        2024-07-07 [2] RSPM (R 4.4.0)
- labeling               0.4.3       2023-08-29 [2] RSPM (R 4.4.0)
- later                  1.3.2       2023-12-06 [2] RSPM (R 4.4.0)
- lattice                0.22-6      2024-03-20 [2] RSPM (R 4.4.0)
- lazyeval               0.2.2       2019-03-15 [2] RSPM (R 4.4.0)
- leiden                 0.4.3.1     2023-11-17 [2] RSPM (R 4.4.0)
- lifecycle              1.0.4       2023-11-07 [2] RSPM (R 4.4.0)
- listenv                0.9.1       2024-01-29 [2] RSPM (R 4.4.0)
- lmtest                 0.9-40      2022-03-21 [2] RSPM (R 4.4.0)
- lubridate            * 1.9.3       2023-09-27 [2] RSPM (R 4.4.0)
- magrittr             * 2.0.3       2022-03-30 [2] RSPM (R 4.4.0)
- MASS                   7.3-61      2024-06-13 [2] RSPM (R 4.4.0)
- Matrix                 1.7-0       2024-04-26 [2] RSPM (R 4.4.0)
- MatrixGenerics         1.16.0      2024-04-30 [2] RSPM (R 4.4.0)
- matrixStats            1.4.1       2024-09-08 [2] RSPM (R 4.4.0)
- mime                   0.12        2021-09-28 [2] RSPM (R 4.4.0)
- miniUI                 0.1.1.1     2018-05-18 [2] RSPM (R 4.4.0)
- multcomp               1.4-25      2023-06-20 [2] RSPM (R 4.4.0)
- munsell                0.5.1       2024-04-01 [2] RSPM (R 4.4.0)
- mvtnorm                1.2-5       2024-05-21 [2] RSPM (R 4.4.0)
- nlme                   3.1-165     2024-06-06 [2] RSPM (R 4.4.0)
- paletteer              1.6.0       2024-01-21 [2] RSPM (R 4.4.0)
- parallelly             1.38.0      2024-07-27 [2] RSPM (R 4.4.0)
- parameters             0.21.7      2024-05-14 [2] RSPM (R 4.4.0)
- patchwork            * 1.3.0.9000  2024-09-20 [2] Github (thomasp85/patchwork@2695a9f)
- pbapply                1.7-2       2023-06-27 [2] RSPM (R 4.4.0)
- pillar                 1.9.0       2023-03-22 [2] RSPM (R 4.4.0)
- pkgconfig              2.0.3       2019-09-22 [2] RSPM (R 4.4.0)
- plotly                 4.10.4      2024-01-13 [2] RSPM (R 4.4.0)
- plyr                   1.8.9       2023-10-02 [2] RSPM (R 4.4.0)
- png                    0.1-8       2022-11-29 [2] RSPM (R 4.4.0)
- polyclip               1.10-7      2024-07-23 [2] RSPM (R 4.4.0)
- prismatic              1.1.2       2024-04-10 [2] RSPM (R 4.4.0)
- processx               3.8.4       2024-03-16 [2] RSPM (R 4.4.0)
- progressr              0.14.0      2023-08-10 [2] RSPM (R 4.4.0)
- promises               1.3.0       2024-04-05 [2] RSPM (R 4.4.0)
- ps                     1.7.6       2024-01-18 [2] RSPM (R 4.4.0)
- purrr                * 1.0.2       2023-08-10 [2] RSPM (R 4.4.0)
- R.methodsS3            1.8.2       2022-06-13 [2] RSPM (R 4.4.0)
- R.oo                   1.26.0      2024-01-24 [2] RSPM (R 4.4.0)
- R.utils                2.12.3      2023-11-18 [2] RSPM (R 4.4.0)
- R6                     2.5.1       2021-08-19 [2] RSPM (R 4.4.0)
- RANN                   2.6.2       2024-08-25 [2] RSPM (R 4.4.0)
- RColorBrewer         * 1.1-3       2022-04-03 [2] RSPM (R 4.4.0)
- Rcpp                   1.0.13      2024-07-17 [2] RSPM (R 4.4.0)
- RcppAnnoy              0.0.22      2024-01-23 [2] RSPM (R 4.4.0)
- RcppHNSW               0.6.0       2024-02-04 [2] RSPM (R 4.4.0)
- readr                * 2.1.5       2024-01-10 [2] RSPM (R 4.4.0)
- rematch2               2.1.2       2020-05-01 [2] RSPM (R 4.4.0)
- remotes                2.5.0       2024-03-17 [2] RSPM (R 4.4.0)
- repr                   1.1.7       2024-03-22 [2] RSPM (R 4.4.0)
- reshape2               1.4.4       2020-04-09 [2] RSPM (R 4.4.0)
- reticulate           * 1.39.0      2024-09-05 [2] RSPM (R 4.4.0)
- rlang                  1.1.4       2024-06-04 [2] RSPM (R 4.4.0)
- rmarkdown              2.28        2024-08-17 [2] RSPM (R 4.4.0)
- ROCR                   1.0-11      2020-05-02 [2] RSPM (R 4.4.0)
- rprojroot              2.0.4       2023-11-05 [2] RSPM (R 4.4.0)
- RSpectra               0.16-2      2024-07-18 [2] RSPM (R 4.4.0)
- rstudioapi             0.16.0      2024-03-24 [2] RSPM (R 4.4.0)
- rsvd                   1.0.5       2021-04-16 [2] RSPM (R 4.4.0)
- Rtsne                  0.17        2023-12-07 [2] RSPM (R 4.4.0)
- S4Arrays               1.4.1       2024-05-20 [2] RSPM (R 4.4.0)
- S4Vectors              0.42.0      2024-04-30 [2] RSPM (R 4.4.0)
- sandwich               3.1-0       2023-12-11 [2] RSPM (R 4.4.0)
- scales                 1.3.0       2023-11-28 [2] RSPM (R 4.4.0)
- scattermore            1.2         2023-06-12 [2] RSPM (R 4.4.0)
- scCustomize          * 2.1.2       2024-06-19 [2] Github (samuel-marsh/scCustomize@fc7a282)
- sceasy               * 0.0.7       2024-06-19 [2] Github (cellgeni/sceasy@c1c0bf9)
- sctransform            0.4.1       2023-10-19 [2] RSPM (R 4.4.0)
- sessioninfo            1.2.2       2021-12-06 [2] RSPM (R 4.4.0)
- Seurat               * 5.1.0.9005  2024-09-20 [2] Github (satijalab/seurat@95de9dc)
- SeuratDisk           * 0.0.0.9021  2024-06-19 [2] Github (mojaveazure/seurat-disk@877d4e1)
- SeuratObject         * 5.0.99.9001 2024-09-20 [2] Github (satijalab/seurat-object@1a140c7)
- SeuratWrappers       * 0.3.5       2024-06-19 [2] Github (satijalab/seurat-wrappers@8d46d6c)
- shape                  1.4.6.1     2024-02-23 [2] RSPM (R 4.4.0)
- shiny                  1.9.1       2024-08-01 [2] RSPM (R 4.4.0)
- skimr                * 2.1.5       2024-06-19 [2] Github (ropensci/skimr@d5126aa)
- snakecase              0.11.1      2023-08-27 [2] RSPM (R 4.4.0)
- sp                   * 2.1-4       2024-04-30 [2] RSPM (R 4.4.0)
- spam                   2.10-0      2023-10-23 [2] RSPM (R 4.4.0)
- SparseArray            1.4.8       2024-05-24 [2] RSPM (R 4.4.0)
- spatstat.data          3.1-2       2024-06-21 [2] RSPM (R 4.4.0)
- spatstat.explore       3.3-2       2024-08-21 [2] RSPM (R 4.4.0)
- spatstat.geom          3.3-3       2024-09-18 [2] RSPM (R 4.4.0)
- spatstat.random        3.3-2       2024-09-18 [2] RSPM (R 4.4.0)
- spatstat.sparse        3.1-0       2024-06-21 [2] RSPM (R 4.4.0)
- spatstat.univar        3.0-1       2024-09-05 [2] RSPM (R 4.4.0)
- spatstat.utils         3.1-0       2024-08-17 [2] RSPM (R 4.4.0)
- statsExpressions       1.5.4       2024-03-20 [2] RSPM (R 4.4.0)
- stringi                1.8.4       2024-05-06 [2] RSPM (R 4.4.0)
- stringr              * 1.5.1       2023-11-14 [2] RSPM (R 4.4.0)
- SummarizedExperiment   1.34.0      2024-05-01 [2] RSPM (R 4.4.0)
- survival               3.7-0       2024-06-05 [2] RSPM (R 4.4.0)
- tensor                 1.5         2012-05-05 [2] RSPM (R 4.4.0)
- TH.data                1.1-2       2023-04-17 [2] RSPM (R 4.4.0)
- tibble               * 3.2.1       2023-03-20 [2] RSPM (R 4.4.0)
- tidyr                * 1.3.1       2024-01-24 [2] RSPM (R 4.4.0)
- tidyselect             1.2.1       2024-03-11 [2] RSPM (R 4.4.0)
- tidyverse            * 2.0.0.9000  2024-06-19 [2] Github (tidyverse/tidyverse@62f32d4)
- timechange             0.3.0       2024-01-18 [2] RSPM (R 4.4.0)
- tzdb                   0.4.0       2023-05-12 [2] RSPM (R 4.4.0)
- UCSC.utils             1.0.0       2024-04-30 [2] RSPM (R 4.4.0)
- UpSetR               * 1.4.0       2024-06-19 [2] Github (hms-dbmi/UpSetR@b14854a)
- utf8                   1.2.4       2023-10-22 [2] RSPM (R 4.4.0)
- uwot                   0.2.2       2024-04-21 [2] RSPM (R 4.4.0)
- vctrs                  0.6.5       2023-12-01 [2] RSPM (R 4.4.0)
- vipor                  0.4.7       2023-12-18 [2] RSPM (R 4.4.0)
- viridis              * 0.6.5       2024-01-29 [2] RSPM (R 4.4.0)
- viridisLite          * 0.4.2       2023-05-02 [2] RSPM (R 4.4.0)
- vroom                  1.6.5       2023-12-05 [2] RSPM (R 4.4.0)
- whisker                0.4.1       2022-12-05 [2] RSPM (R 4.4.0)
- withr                  3.0.1       2024-07-31 [2] RSPM (R 4.4.0)
- workflowr            * 1.7.1       2023-08-23 [2] RSPM (R 4.4.0)
- xfun                   0.47        2024-08-17 [2] RSPM (R 4.4.0)
- xtable                 1.8-4       2019-04-21 [2] RSPM (R 4.4.0)
- XVector                0.44.0      2024-04-30 [2] RSPM (R 4.4.0)
- yaml                   2.3.10      2024-07-26 [2] RSPM (R 4.4.0)
- zeallot                0.1.0       2018-01-28 [2] RSPM (R 4.4.0)
- zlibbioc               1.50.0      2024-04-30 [2] RSPM (R 4.4.0)
- zoo                    1.8-12      2023-04-13 [2] RSPM (R 4.4.0)
+─ Packages ───────────────────────────────────────────────────────────────────
+ package          * version     date (UTC) lib source
+ abind              1.4-8       2024-09-12 [2] RSPM (R 4.4.0)
+ anndata          * 0.7.5.6     2023-03-17 [2] RSPM (R 4.4.0)
+ assertthat         0.2.1       2019-03-21 [2] RSPM (R 4.4.0)
+ base64enc          0.1-3       2015-07-28 [2] RSPM (R 4.4.0)
+ bayestestR         0.13.2      2024-02-12 [2] RSPM (R 4.4.0)
+ beeswarm           0.4.0       2021-06-01 [2] RSPM (R 4.4.0)
+ BiocManager        1.30.23     2024-05-04 [2] RSPM (R 4.4.0)
+ bit                4.0.5       2022-11-15 [2] RSPM (R 4.4.0)
+ bit64              4.0.5       2020-08-30 [2] RSPM (R 4.4.0)
+ circlize           0.4.16      2024-06-19 [2] Github (jokergoo/circlize@9b21578)
+ cli                3.6.3       2024-06-21 [2] RSPM (R 4.4.0)
+ cluster            2.1.6       2023-12-01 [2] RSPM (R 4.4.0)
+ coda               0.19-4.1    2024-01-31 [2] RSPM (R 4.4.0)
+ codetools          0.2-20      2024-03-31 [2] RSPM (R 4.4.0)
+ colorspace         2.1-1       2024-07-26 [2] RSPM (R 4.4.0)
+ correlation        0.8.5       2024-06-16 [2] RSPM (R 4.4.0)
+ cowplot          * 1.1.3       2024-01-22 [2] RSPM (R 4.4.0)
+ crayon             1.5.3       2024-06-20 [2] RSPM (R 4.4.0)
+ data.table         1.16.0      2024-08-27 [2] RSPM (R 4.4.0)
+ datawizard         0.11.0      2024-06-05 [2] RSPM (R 4.4.0)
+ deldir             2.0-4       2024-02-28 [2] RSPM (R 4.4.0)
+ digest             0.6.37      2024-08-19 [2] RSPM (R 4.4.0)
+ dotCall64          1.1-1       2023-11-28 [2] RSPM (R 4.4.0)
+ dplyr            * 1.1.4       2023-11-17 [2] RSPM (R 4.4.0)
+ effectsize         0.8.8       2024-05-12 [2] RSPM (R 4.4.0)
+ emmeans            1.10.2      2024-05-20 [2] RSPM (R 4.4.0)
+ estimability       1.5.1       2024-05-12 [2] RSPM (R 4.4.0)
+ evaluate           1.0.0       2024-09-17 [2] RSPM (R 4.4.0)
+ fansi              1.0.6       2023-12-08 [2] RSPM (R 4.4.0)
+ farver             2.1.2       2024-05-13 [2] RSPM (R 4.4.0)
+ fastDummies        1.7.4       2024-08-16 [2] RSPM (R 4.4.0)
+ fastmap            1.2.0       2024-05-15 [2] RSPM (R 4.4.0)
+ fitdistrplus       1.2-1       2024-07-12 [2] RSPM (R 4.4.0)
+ forcats          * 1.0.0       2023-01-29 [2] RSPM (R 4.4.0)
+ future           * 1.34.0      2024-07-29 [2] RSPM (R 4.4.0)
+ future.apply       1.11.2      2024-03-28 [2] RSPM (R 4.4.0)
+ generics           0.1.3       2022-07-05 [2] RSPM (R 4.4.0)
+ ggbeeswarm         0.7.2       2024-06-19 [2] Github (eclarke/ggbeeswarm@ce2da8a)
+ ggmin              0.0.0.9000  2024-06-19 [2] Github (sjessa/ggmin@8ada274)
+ ggplot2          * 3.5.1       2024-04-23 [2] RSPM (R 4.4.0)
+ ggprism            1.0.5       2024-06-19 [2] Github (csdaw/ggprism@b6e6c0e)
+ ggrastr            1.0.2       2024-06-19 [2] Github (VPetukhov/ggrastr@50ca3e0)
+ ggrepel            0.9.6       2024-09-20 [2] Github (slowkow/ggrepel@e94776b)
+ ggridges           0.5.6       2024-01-23 [2] RSPM (R 4.4.0)
+ ggstatsplot      * 0.12.3.9000 2024-06-19 [2] Github (IndrajeetPatil/ggstatsplot@d55f86a)
+ GlobalOptions      0.1.2       2020-06-10 [2] RSPM (R 4.4.0)
+ globals            0.16.3      2024-03-08 [2] RSPM (R 4.4.0)
+ glue               1.7.0       2024-01-09 [2] RSPM (R 4.4.0)
+ goftest            1.2-3       2021-10-07 [2] RSPM (R 4.4.0)
+ gridExtra          2.3         2017-09-09 [2] RSPM (R 4.4.0)
+ gtable             0.3.5       2024-04-22 [2] RSPM (R 4.4.0)
+ hdf5r              1.3.10      2024-03-02 [2] RSPM (R 4.4.0)
+ here             * 1.0.1       2020-12-13 [2] RSPM (R 4.4.0)
+ hms                1.1.3       2023-03-21 [2] RSPM (R 4.4.0)
+ htmltools          0.5.8.1     2024-04-04 [2] RSPM (R 4.4.0)
+ htmlwidgets        1.6.4       2023-12-06 [2] RSPM (R 4.4.0)
+ httpuv             1.6.15      2024-03-26 [2] RSPM (R 4.4.0)
+ httr               1.4.7       2023-08-15 [2] RSPM (R 4.4.0)
+ ica                1.0-3       2022-07-08 [2] RSPM (R 4.4.0)
+ igraph             2.0.3       2024-03-13 [2] RSPM (R 4.4.0)
+ insight            0.20.1      2024-06-11 [2] RSPM (R 4.4.0)
+ irlba              2.3.5.1     2022-10-03 [2] RSPM (R 4.4.0)
+ janitor            2.2.0.9000  2024-06-19 [2] Github (sfirke/janitor@80cd1eb)
+ jsonlite           1.8.8       2023-12-04 [2] RSPM (R 4.4.0)
+ KernSmooth         2.23-24     2024-05-17 [2] RSPM (R 4.4.0)
+ knitr              1.48        2024-07-07 [2] RSPM (R 4.4.0)
+ labeling           0.4.3       2023-08-29 [2] RSPM (R 4.4.0)
+ later              1.3.2       2023-12-06 [2] RSPM (R 4.4.0)
+ lattice            0.22-6      2024-03-20 [2] RSPM (R 4.4.0)
+ lazyeval           0.2.2       2019-03-15 [2] RSPM (R 4.4.0)
+ leiden             0.4.3.1     2023-11-17 [2] RSPM (R 4.4.0)
+ lifecycle          1.0.4       2023-11-07 [2] RSPM (R 4.4.0)
+ listenv            0.9.1       2024-01-29 [2] RSPM (R 4.4.0)
+ lmtest             0.9-40      2022-03-21 [2] RSPM (R 4.4.0)
+ lubridate        * 1.9.3       2023-09-27 [2] RSPM (R 4.4.0)
+ magrittr         * 2.0.3       2022-03-30 [2] RSPM (R 4.4.0)
+ MASS               7.3-61      2024-06-13 [2] RSPM (R 4.4.0)
+ Matrix             1.7-0       2024-04-26 [2] RSPM (R 4.4.0)
+ matrixStats        1.4.1       2024-09-08 [2] RSPM (R 4.4.0)
+ mime               0.12        2021-09-28 [2] RSPM (R 4.4.0)
+ miniUI             0.1.1.1     2018-05-18 [2] RSPM (R 4.4.0)
+ multcomp           1.4-25      2023-06-20 [2] RSPM (R 4.4.0)
+ munsell            0.5.1       2024-04-01 [2] RSPM (R 4.4.0)
+ mvtnorm            1.2-5       2024-05-21 [2] RSPM (R 4.4.0)
+ nlme               3.1-165     2024-06-06 [2] RSPM (R 4.4.0)
+ paletteer          1.6.0       2024-01-21 [2] RSPM (R 4.4.0)
+ parallelly         1.38.0      2024-07-27 [2] RSPM (R 4.4.0)
+ parameters         0.21.7      2024-05-14 [2] RSPM (R 4.4.0)
+ patchwork        * 1.3.0.9000  2024-09-20 [2] Github (thomasp85/patchwork@2695a9f)
+ pbapply            1.7-2       2023-06-27 [2] RSPM (R 4.4.0)
+ pillar             1.9.0       2023-03-22 [2] RSPM (R 4.4.0)
+ pkgconfig          2.0.3       2019-09-22 [2] RSPM (R 4.4.0)
+ plotly             4.10.4      2024-01-13 [2] RSPM (R 4.4.0)
+ plyr               1.8.9       2023-10-02 [2] RSPM (R 4.4.0)
+ png                0.1-8       2022-11-29 [2] RSPM (R 4.4.0)
+ polyclip           1.10-7      2024-07-23 [2] RSPM (R 4.4.0)
+ progressr          0.14.0      2023-08-10 [2] RSPM (R 4.4.0)
+ promises           1.3.0       2024-04-05 [2] RSPM (R 4.4.0)
+ purrr            * 1.0.2       2023-08-10 [2] RSPM (R 4.4.0)
+ R.methodsS3        1.8.2       2022-06-13 [2] RSPM (R 4.4.0)
+ R.oo               1.26.0      2024-01-24 [2] RSPM (R 4.4.0)
+ R.utils            2.12.3      2023-11-18 [2] RSPM (R 4.4.0)
+ R6                 2.5.1       2021-08-19 [2] RSPM (R 4.4.0)
+ RANN               2.6.2       2024-08-25 [2] RSPM (R 4.4.0)
+ RColorBrewer     * 1.1-3       2022-04-03 [2] RSPM (R 4.4.0)
+ Rcpp               1.0.13      2024-07-17 [2] RSPM (R 4.4.0)
+ RcppAnnoy          0.0.22      2024-01-23 [2] RSPM (R 4.4.0)
+ RcppHNSW           0.6.0       2024-02-04 [2] RSPM (R 4.4.0)
+ readr            * 2.1.5       2024-01-10 [2] RSPM (R 4.4.0)
+ rematch2           2.1.2       2020-05-01 [2] RSPM (R 4.4.0)
+ remotes            2.5.0       2024-03-17 [2] RSPM (R 4.4.0)
+ repr               1.1.7       2024-03-22 [2] RSPM (R 4.4.0)
+ reshape2           1.4.4       2020-04-09 [2] RSPM (R 4.4.0)
+ reticulate       * 1.39.0      2024-09-05 [2] RSPM (R 4.4.0)
+ rlang              1.1.4       2024-06-04 [2] RSPM (R 4.4.0)
+ rmarkdown          2.28        2024-08-17 [2] RSPM (R 4.4.0)
+ ROCR               1.0-11      2020-05-02 [2] RSPM (R 4.4.0)
+ rprojroot          2.0.4       2023-11-05 [2] RSPM (R 4.4.0)
+ RSpectra           0.16-2      2024-07-18 [2] RSPM (R 4.4.0)
+ rstudioapi         0.16.0      2024-03-24 [2] RSPM (R 4.4.0)
+ rsvd               1.0.5       2021-04-16 [2] RSPM (R 4.4.0)
+ Rtsne              0.17        2023-12-07 [2] RSPM (R 4.4.0)
+ sandwich           3.1-0       2023-12-11 [2] RSPM (R 4.4.0)
+ scales             1.3.0       2023-11-28 [2] RSPM (R 4.4.0)
+ scattermore        1.2         2023-06-12 [2] RSPM (R 4.4.0)
+ scCustomize      * 2.1.2       2024-06-19 [2] Github (samuel-marsh/scCustomize@fc7a282)
+ sceasy           * 0.0.7       2024-06-19 [2] Github (cellgeni/sceasy@c1c0bf9)
+ sctransform        0.4.1       2023-10-19 [2] RSPM (R 4.4.0)
+ sessioninfo        1.2.2       2021-12-06 [2] RSPM (R 4.4.0)
+ Seurat           * 5.1.0.9005  2024-09-20 [2] Github (satijalab/seurat@95de9dc)
+ SeuratDisk       * 0.0.0.9021  2024-06-19 [2] Github (mojaveazure/seurat-disk@877d4e1)
+ SeuratObject     * 5.0.99.9001 2024-09-20 [2] Github (satijalab/seurat-object@1a140c7)
+ SeuratWrappers   * 0.3.5       2024-06-19 [2] Github (satijalab/seurat-wrappers@8d46d6c)
+ shape              1.4.6.1     2024-02-23 [2] RSPM (R 4.4.0)
+ shiny              1.9.1       2024-08-01 [2] RSPM (R 4.4.0)
+ skimr            * 2.1.5       2024-06-19 [2] Github (ropensci/skimr@d5126aa)
+ snakecase          0.11.1      2023-08-27 [2] RSPM (R 4.4.0)
+ sp               * 2.1-4       2024-04-30 [2] RSPM (R 4.4.0)
+ spam               2.10-0      2023-10-23 [2] RSPM (R 4.4.0)
+ spatstat.data      3.1-2       2024-06-21 [2] RSPM (R 4.4.0)
+ spatstat.explore   3.3-2       2024-08-21 [2] RSPM (R 4.4.0)
+ spatstat.geom      3.3-3       2024-09-18 [2] RSPM (R 4.4.0)
+ spatstat.random    3.3-2       2024-09-18 [2] RSPM (R 4.4.0)
+ spatstat.sparse    3.1-0       2024-06-21 [2] RSPM (R 4.4.0)
+ spatstat.univar    3.0-1       2024-09-05 [2] RSPM (R 4.4.0)
+ spatstat.utils     3.1-0       2024-08-17 [2] RSPM (R 4.4.0)
+ statsExpressions   1.5.4       2024-03-20 [2] RSPM (R 4.4.0)
+ stringi            1.8.4       2024-05-06 [2] RSPM (R 4.4.0)
+ stringr          * 1.5.1       2023-11-14 [2] RSPM (R 4.4.0)
+ survival           3.7-0       2024-06-05 [2] RSPM (R 4.4.0)
+ tensor             1.5         2012-05-05 [2] RSPM (R 4.4.0)
+ TH.data            1.1-2       2023-04-17 [2] RSPM (R 4.4.0)
+ tibble           * 3.2.1       2023-03-20 [2] RSPM (R 4.4.0)
+ tidyr            * 1.3.1       2024-01-24 [2] RSPM (R 4.4.0)
+ tidyselect         1.2.1       2024-03-11 [2] RSPM (R 4.4.0)
+ tidyverse        * 2.0.0.9000  2024-06-19 [2] Github (tidyverse/tidyverse@62f32d4)
+ timechange         0.3.0       2024-01-18 [2] RSPM (R 4.4.0)
+ tzdb               0.4.0       2023-05-12 [2] RSPM (R 4.4.0)
+ UpSetR           * 1.4.0       2024-06-19 [2] Github (hms-dbmi/UpSetR@b14854a)
+ utf8               1.2.4       2023-10-22 [2] RSPM (R 4.4.0)
+ uwot               0.2.2       2024-04-21 [2] RSPM (R 4.4.0)
+ vctrs              0.6.5       2023-12-01 [2] RSPM (R 4.4.0)
+ vipor              0.4.7       2023-12-18 [2] RSPM (R 4.4.0)
+ viridis          * 0.6.5       2024-01-29 [2] RSPM (R 4.4.0)
+ viridisLite      * 0.4.2       2023-05-02 [2] RSPM (R 4.4.0)
+ vroom              1.6.5       2023-12-05 [2] RSPM (R 4.4.0)
+ withr              3.0.1       2024-07-31 [2] RSPM (R 4.4.0)
+ xfun               0.47        2024-08-17 [2] RSPM (R 4.4.0)
+ xtable             1.8-4       2019-04-21 [2] RSPM (R 4.4.0)
+ yaml               2.3.10      2024-07-26 [2] RSPM (R 4.4.0)
+ zeallot            0.1.0       2018-01-28 [2] RSPM (R 4.4.0)
+ zoo                1.8-12      2023-04-13 [2] RSPM (R 4.4.0)
 
  [1] /home/etretiakov/R/x86_64-pc-linux-gnu-library/4.4
  [2] /opt/R/4.4.0/lib/R/library
 
-- Python configuration -------------------------------------------------------
+─ Python configuration ───────────────────────────────────────────────────────
  python:         /opt/python/3.8.8/bin/python
  libpython:      /opt/python/3.8.8/lib/libpython3.8.so
  pythonhome:     /opt/python/3.8.8:/opt/python/3.8.8
@@ -2309,7 +3012,7 @@ sessioninfo::session_info()
  
  NOTE: Python version was forced by RETICULATE_PYTHON
 
-------------------------------------------------------------------------------
+──────────────────────────────────────────────────────────────────────────────
 ```
 :::
 :::
