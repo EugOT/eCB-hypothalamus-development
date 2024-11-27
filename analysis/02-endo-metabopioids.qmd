@@ -325,7 +325,7 @@ rar2020.srt.pub$age %>% forcats::fct_count()
 
 
 ```{r}
-#| label: plot-feature-cb-romanov2020
+#| label: plot-feature-metabolic-romanov2020
 #| fig-width: 18
 #| fig-height: 36
 FeaturePlot(
@@ -342,7 +342,7 @@ FeaturePlot(
 ```
 
 ```{r}
-#| label: e-cb-representation
+#| label: e-metabolic-representation
 sbs_mtx <-
   rar2020.srt.pub@assays$RNA@data %>%
   as.data.frame() %>%
@@ -375,7 +375,7 @@ content_sbs_mtx <-
 ```
 
 ```{r}
-#| label: upset-group-e-cb-all-romanov2020
+#| label: upset-group-metabolic-all-romanov2020
 #| fig-height: 24
 #| fig-asp: 1.214
 upset(
@@ -396,7 +396,7 @@ upset(
 ```
 
 ```{r}
-#| label: upset-not-grouped-e-cb-all-romanov2020
+#| label: upset-not-grouped-metabolic-all-romanov2020
 #| fig-height: 24
 #| fig-asp: 1.214
 upset(
@@ -627,6 +627,8 @@ srt <- subset(srt, subset = stage %in% c("Pubertal", "Adult"))
 srt
 ```
 
+We subset Kim et al., 2020 dataset to only Pubertal and Adult stages.
+
 ## Intersection sets analysis
 
 ### PVN Neurons from Kim et al. 2020, Nature Communications
@@ -668,7 +670,7 @@ FeaturePlot_scCustom(
 ```
 
 ```{r}
-#| label: e-cb-representation-kim2020-pvn
+#| label: e-metabolic-representation-kim2020-pvn
 sbs_mtx <-
   srt@assays$RNA@layers$data %>%
   as.data.frame() %>%
@@ -708,7 +710,7 @@ content_sbs_mtx_kim <-
 #### All
 
 ```{r}
-#| label: upset-group-e-cb-kim2020-pvn
+#| label: upset-group-metabolic-kim2020-pvn
 #| fig-height: 24
 #| fig-asp: 1.214
 upset(
@@ -734,7 +736,7 @@ upset(
 #### Pubertal
 
 ```{r}
-#| label: upset-group-e-cb-kim2020-pvn-Pubertal
+#| label: upset-group-metabolic-kim2020-pvn-Pubertal
 #| fig-height: 24
 #| fig-asp: 1.214
 upset(
@@ -760,7 +762,7 @@ upset(
 #### Adult
 
 ```{r}
-#| label: upset-group-e-cb-kim2020-pvn-Adult
+#| label: upset-group-metabolic-kim2020-pvn-Adult
 #| fig-height: 24
 #| fig-asp: 1.214
 upset(
@@ -809,6 +811,8 @@ rar2020.srt.pvn$age <-
 rar2020.srt.pvn <- subset(rar2020.srt.pvn, subset = stage %in% c("Pubertal", "Adult"))
 ```
 
+We subset Romanov et al., 2020 dataset to only Pubertal and Adult stages.
+
 ```{r}
 #| label: plot-romanov2020-pvn-feature-np-split-by-stages
 #| fig-width: 21
@@ -829,7 +833,7 @@ FeaturePlot_scCustom(
 ```
 
 ```{r}
-#| label: plot-romanov2020-pvn-feature-cb-split-by-stages
+#| label: plot-romanov2020-pvn-feature-metabopioid-split-by-stages
 #| fig-width: 18
 #| fig-height: 21
 FeaturePlot_scCustom(
@@ -848,7 +852,7 @@ FeaturePlot_scCustom(
 
 
 ```{r}
-#| label: e-cb-representation-romanov2020-pvn
+#| label: e-metabolic-representation-romanov2020-pvn
 sbs_mtx <-
   rar2020.srt.pvn@assays$RNA@data %>%
   as.data.frame() %>%
@@ -885,7 +889,7 @@ content_sbs_mtx_romanov <-
 #### All
 
 ```{r}
-#| label: upset-group-e-cb-romanov2020-pvn
+#| label: upset-group-metabolic-romanov2020-pvn
 #| fig-height: 24
 #| fig-width: 36
 upset(
@@ -910,7 +914,7 @@ upset(
 #### Pubertal
 
 ```{r}
-#| label: upset-group-e-cb-romanov2020-pvn-Pubertal
+#| label: upset-group-metabolic-romanov2020-pvn-Pubertal
 #| fig-height: 24
 #| fig-width: 36
 upset(
@@ -936,7 +940,7 @@ upset(
 #### Adult
 
 ```{r}
-#| label: upset-group-e-cb-romanov2020-pvn-Adult
+#| label: upset-group-metabolic-romanov2020-pvn-Adult
 #| fig-height: 18
 #| fig-width: 24
 upset(
@@ -962,7 +966,7 @@ upset(
 ### PVN Neurons from both datasets joined
 
 ```{r}
-#| label: e-cb-representation-pvn
+#| label: e-metabolic-representation-pvn
 # Prepare table of intersection sets analysis
 to_select <-
   c(gene.scale, "wtree", "age", "stage") %>%
@@ -980,7 +984,7 @@ content_sbs_mtx <-
 #### All
 
 ```{r}
-#| label: upset-group-e-cb-pvn
+#| label: upset-group-metabolic-pvn
 #| fig-height: 24
 #| fig-width: 36
 upset(
@@ -1005,7 +1009,7 @@ upset(
 #### Pubertal
 
 ```{r}
-#| label: upset-group-e-cb-pvn-Pubertal-f2
+#| label: upset-group-metabolic-pvn-Pubertal-f2
 #| fig-height: 24
 #| fig-width: 36
 upset(
@@ -1035,7 +1039,7 @@ skim(as.data.frame(
 ```
 
 ```{r}
-#| label: upset-group-e-cb-pvn-Pubertal-f3
+#| label: upset-group-e-opioid-pvn-Pubertal-f3
 #| fig-height: 24
 #| fig-width: 36
 upset(
@@ -1068,7 +1072,7 @@ skim(as.data.frame(
 ```
 
 ```{r}
-#| label: upset-group-e-cb-pvn-Pubertal-f4
+#| label: upset-group-e-metabopioid-pvn-Pubertal-f4
 #| fig-height: 24
 #| fig-width: 36
 upset(
@@ -1105,7 +1109,7 @@ skim(as.data.frame(
 #### Adult
 
 ```{r}
-#| label: upset-group-e-cb-pvn-Adult-f2
+#| label: upset-group-metabolic-pvn-Adult-f2
 #| fig-height: 24
 #| fig-width: 36
 upset(
@@ -1136,7 +1140,7 @@ skim(as.data.frame(
 ```
 
 ```{r}
-#| label: upset-group-e-cb-pvn-Adult-f3
+#| label: upset-group-e-opioid-pvn-Adult-f3
 #| fig-height: 24
 #| fig-width: 36
 upset(
@@ -1167,7 +1171,7 @@ skim(as.data.frame(
 ```
 
 ```{r}
-#| label: upset-group-e-cb-pvn-Adult-f4
+#| label: upset-group-e-metabopioid-pvn-Adult-f4
 #| fig-height: 24
 #| fig-width: 36
 upset(
@@ -1207,5 +1211,4 @@ skim(as.data.frame(
 sessioninfo::session_info()
 
 ```
-
 
