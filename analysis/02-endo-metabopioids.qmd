@@ -3,7 +3,7 @@ title: "Metabolic and opioid system expression analysis of Pubertal and Adult Hy
 author: "Evgenii O. Tretiakov"
 date: "`r Sys.Date()`"
 format:
-  html:
+  html: default
     toc: true
     df-print: paged
     code-fold: true
@@ -13,7 +13,7 @@ format:
     fig-responsive: true
     fig-dpi: 300
     embed-resources: true
-  pdf:
+  pdf: default
     colorlinks: true
     fontsize: 12pt
 execute:
