@@ -32,3 +32,5 @@ fastq/*
 *.tar
 *.gz
 
+
+/.quarto/

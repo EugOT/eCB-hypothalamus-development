@@ -1,9 +1,40 @@
 ---
 title: "Metabolic and opioid system expression analysis of Pubertal and Adult Hypothalamus with focus on PVN"
-author: "Evgenii O. Tretiakov"
+authors:
+  - name: Evgenii O. Tretiakov, PhD
+    affiliation: 
+      - Department of Molecular Neurosciences, Center for Brain Research, Medical University of Vienna, Vienna A-1090, Austria
+    roles: 
+      - Conceptualization
+      - Formal analysis
+      - Data curation
+      - Investigation
+      - Methodology
+      - Software
+      - Visualization
+      - Resources
+      - Writing
+    corresponding: true
+    orcid: 0000-0001-5920-2190
+    email: evgenii.tretiakov@meduniwien.ac.at
+  - name: Tibor Harkany, PhD
+    affiliation: 
+      - Department of Molecular Neurosciences, Center for Brain Research, Medical University of Vienna, Vienna A-1090, Austria
+      - Division of Molecular and Cellular Neuroendocrinology, Department of Neuroscience, Biomedicum 7D, Karolinska Institutet, Solna SE-17165, Sweden
+    roles: 
+      - Conceptualization
+      - Funding acquisition
+      - Resources
+      - Supervision
+      - Project administration
+      - Writing
+    corresponding: true
+    orcid: 0000-0002-6637-5900
+    email: tibor.harkany@meduniwien.ac.at
 date: "`r Sys.Date()`"
 format:
-  html: default
+  html: 
+    default: true
     toc: true
     df-print: paged
     code-fold: true
@@ -13,7 +44,8 @@ format:
     fig-responsive: true
     fig-dpi: 300
     embed-resources: true
-  pdf: default
+  pdf: 
+    default: true
     colorlinks: true
     fontsize: 12pt
 execute:
@@ -30,6 +62,7 @@ knitr:
     fig.retina: 2
     fig.width: 14
     fig.height: 12
+bibliography: references.bib
 ---
 
 ```{r}
@@ -170,53 +203,52 @@ metric <- "euclidean"
 signature <- 100
 ```
 
-
 ```{r}
 #| label: opioid-system-genes
 opioid_system_genes <- c(
-    # Classical opioid receptors
-    "Oprd1",  # Delta opioid receptor
-    "Oprk1",  # Kappa opioid receptor 
-    "Oprl1",  # Nociceptin/orphanin FQ receptor
-    "Oprm1",  # Mu opioid receptor
-    
-    # Processing enzymes
-    "Pcsk1",  # Proprotein convertase 1
-    "Pcsk2",   # Proprotein convertase 2
-    
-    # Endogenous opioid precursors
-    "Pdyn",   # Prodynorphin
-    "Penk",   # Proenkephalin
-    #"Pomc",   # Proopiomelanocortin
-    "Pnoc"   # Prepronociceptin
+  # Classical opioid receptors
+  "Oprd1", # Delta opioid receptor
+  "Oprk1", # Kappa opioid receptor
+  "Oprl1", # Nociceptin/orphanin FQ receptor
+  "Oprm1", # Mu opioid receptor
+
+  # Processing enzymes
+  "Pcsk1", # Proprotein convertase 1
+  "Pcsk2", # Proprotein convertase 2
+
+  # Endogenous opioid precursors
+  "Pdyn", # Prodynorphin
+  "Penk", # Proenkephalin
+  # "Pomc",   # Proopiomelanocortin
+  "Pnoc" # Prepronociceptin
 )
 ```
 
 ```{r}
 #| label: metabolic-signaling-genes
 metabolic_signaling_genes <- c(
-    # Receptor tyrosine kinases and ligands
-    "Alk",      # Anaplastic lymphoma kinase - neural development, metabolism
-    "Fam150a",  # ALK ligand 1/Augmentor-α - ALK receptor activator
-    "Fam150b",  # ALK ligand 2/Augmentor-β - ALK receptor activator
-    
-    # Melanocortin system
-    "Mc3r",     # Melanocortin 3 receptor - energy homeostasis, inflammation
-    "Mc4r",     # Melanocortin 4 receptor - appetite control, energy balance
-    
-    # Metabolic hormone receptors
-    "Lepr",     # Leptin receptor - energy balance, satiety
-    "Insr",     # Insulin receptor - glucose homeostasis
-    #"Igf1r",    # Insulin-like growth factor 1 receptor - growth, development
-    
-    # Signaling adaptors/regulators
-    "Lmo4",     # LIM domain only 4 - transcriptional regulation, metabolism
-    "Irs1",     # Insulin receptor substrate 1 - insulin signaling
-    "Irs4"      # Insulin receptor substrate 4 - insulin/leptin signaling
+  # Receptor tyrosine kinases and ligands
+  "Alk", # Anaplastic lymphoma kinase - neural development, metabolism
+  "Fam150a", # ALK ligand 1/Augmentor-α - ALK receptor activator
+  "Fam150b", # ALK ligand 2/Augmentor-β - ALK receptor activator
+
+  # Melanocortin system
+  "Mc3r", # Melanocortin 3 receptor - energy homeostasis, inflammation
+  "Mc4r", # Melanocortin 4 receptor - appetite control, energy balance
+
+  # Metabolic hormone receptors
+  "Lepr", # Leptin receptor - energy balance, satiety
+  "Insr", # Insulin receptor - glucose homeostasis
+  # "Igf1r",    # Insulin-like growth factor 1 receptor - growth, development
+
+  # Signaling adaptors/regulators
+  "Lmo4", # LIM domain only 4 - transcriptional regulation, metabolism
+  "Irs1", # Insulin receptor substrate 1 - insulin signaling
+  "Irs4" # Insulin receptor substrate 4 - insulin/leptin signaling
 )
 ```
 
-## Load Kim DW et al 2020
+## Load Kim DW et al., 2020[@kim2020]
 
 ```{r}
 #| label: load-data
@@ -227,6 +259,7 @@ anndata <- sc$read(here(
 ```
 
 ### Convert adata object to R AnnDataR6 object.
+
 ```{r}
 #| label: convert-to-r
 adata <- py_to_r(anndata)
@@ -263,7 +296,7 @@ Idents(srt) <- "age"
 srt <- Store_Palette_Seurat(seurat_object = srt, palette = rev(brewer.pal(n = 11, name = "Spectral")), palette_name = "expr_Colour_Pal")
 ```
 
-## Load Romanov et al 2020
+## Load Romanov et al., 2020[@romanov2020]
 
 ```{r}
 #| label: load-seurat
@@ -323,7 +356,6 @@ rar2020.srt.pub$age <-
 rar2020.srt.pub$age %>% forcats::fct_count()
 ```
 
-
 ```{r}
 #| label: plot-feature-metabolic-romanov2020
 #| fig-width: 18
@@ -371,7 +403,6 @@ content_sbs_mtx <-
   (sbs_mtx > min_filt_vector2) %>%
   as_tibble() %>%
   mutate_all(as.numeric)
-
 ```
 
 ```{r}
@@ -459,7 +490,6 @@ srt <- ProjectUMAP(
 Idents(srt) <- srt$Cluster
 ```
 
-
 ```{r}
 all.genes <- rownames(srt)
 gene.scale <- c(
@@ -470,11 +500,10 @@ gene.scale <- c(
   npr,
   nmr,
   neurotrans
-  ) |> 
+) |>
   unique() %>%
   .[. %in% all.genes]
 ```
-
 
 ```{r}
 #| label: plot-reference-umap-transfered
@@ -499,10 +528,11 @@ p1 <- FeaturePlot_scCustom(
     "Avp",
     "Sst",
     "Crh",
-    "Trh"),
+    "Trh"
+  ),
   label = F,
   num_columns = 5,
-  min.cutoff = 'q05',
+  min.cutoff = "q05",
   na_cutoff = 2
 ) * NoLegend()
 p2 <- FeaturePlot_scCustom(
@@ -513,10 +543,11 @@ p2 <- FeaturePlot_scCustom(
     "Avp",
     "Sst",
     "Crh",
-    "Trh"),
+    "Trh"
+  ),
   label = FALSE,
   num_columns = 5,
-  min.cutoff = 'q05',
+  min.cutoff = "q05",
   na_cutoff = 2
 ) * NoLegend()
 (p1 / p2)
@@ -531,10 +562,11 @@ p1 <- FeaturePlot_scCustom(
   reduction = "umap",
   features = c(
     "Oxt",
-    "Avp"),
+    "Avp"
+  ),
   label = F,
   num_columns = 2,
-  min.cutoff = 'q05',
+  min.cutoff = "q05",
   na_cutoff = 5
 ) * NoLegend()
 p2 <- FeaturePlot_scCustom(
@@ -542,15 +574,15 @@ p2 <- FeaturePlot_scCustom(
   reduction = "ref.umap",
   features = c(
     "Oxt",
-    "Avp"),
+    "Avp"
+  ),
   label = FALSE,
   num_columns = 2,
-  min.cutoff = 'q05',
+  min.cutoff = "q05",
   na_cutoff = 5
 ) * NoLegend()
 (p1 / p2)
 ```
-
 
 ```{r}
 #| label: ref-embedding-split-stage-kim2020-np
@@ -572,18 +604,18 @@ FeaturePlot_scCustom(
   srt,
   reduction = "ref.umap",
   features = c(
-    "Oxt", 
-    "Avp", 
-    "Sst", 
-    "Crh", 
-    "Trh"), 
-  split.by = "stage", 
-  min.cutoff = 'q05',
-  na_cutoff = 2, 
+    "Oxt",
+    "Avp",
+    "Sst",
+    "Crh",
+    "Trh"
+  ),
+  split.by = "stage",
+  min.cutoff = "q05",
+  na_cutoff = 2,
   label = F,
   num_columns = 4
-  ) * NoLegend()
-
+) * NoLegend()
 ```
 
 ```{r}
@@ -594,17 +626,18 @@ FeaturePlot_scCustom(
   rar2020.srt.pub,
   reduction = "umap",
   features = c(
-    "Oxt", 
-    "Avp", 
-    "Sst", 
-    "Crh", 
-    "Trh"), 
-  split.by = "stage", 
-  min.cutoff = 'q05',
-  na_cutoff = 2, 
+    "Oxt",
+    "Avp",
+    "Sst",
+    "Crh",
+    "Trh"
+  ),
+  split.by = "stage",
+  min.cutoff = "q05",
+  na_cutoff = 2,
   label = F,
   num_columns = 4
-  ) * NoLegend()
+) * NoLegend()
 ```
 
 ```{r}
@@ -641,15 +674,16 @@ FeaturePlot_scCustom(
   srt,
   reduction = "ref.umap",
   features = c(
-    "Oxt", 
-    "Avp", 
-    "Sst", 
-    "Crh", 
-    "Trh"), 
-  na_cutoff = 2, 
+    "Oxt",
+    "Avp",
+    "Sst",
+    "Crh",
+    "Trh"
+  ),
+  na_cutoff = 2,
   label = F,
   num_columns = 5
-  ) * NoLegend()
+) * NoLegend()
 ```
 
 ```{r}
@@ -657,16 +691,16 @@ FeaturePlot_scCustom(
 #| fig-width: 18
 #| fig-height: 21
 FeaturePlot_scCustom(
-  srt, 
-  reduction = "ref.umap", 
+  srt,
+  reduction = "ref.umap",
   features = c(
-    metabolic_signaling_genes, 
+    metabolic_signaling_genes,
     opioid_system_genes,
     "Slc17a6", "Gad1", "Gad2", "Crh", "Trh", "Oxt", "Sst"
-    ),
+  ),
   label = F,
   num_columns = 4
-  ) * NoLegend()
+) * NoLegend()
 ```
 
 ```{r}
@@ -704,7 +738,6 @@ content_sbs_mtx_kim <-
   bind_cols(
     srt@meta.data |> select(wtree, age, stage)
   )
-
 ```
 
 #### All
@@ -716,8 +749,8 @@ content_sbs_mtx_kim <-
 upset(
   as.data.frame(
     content_sbs_mtx_kim |>
-    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -732,7 +765,6 @@ upset(
 )
 ```
 
-
 #### Pubertal
 
 ```{r}
@@ -742,9 +774,9 @@ upset(
 upset(
   as.data.frame(
     content_sbs_mtx_kim |>
-    filter(stage == "Pubertal") |>
-    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+      filter(stage == "Pubertal") |>
+      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -768,9 +800,9 @@ upset(
 upset(
   as.data.frame(
     content_sbs_mtx_kim |>
-    filter(stage == "Adult") |>
-    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+      filter(stage == "Adult") |>
+      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -811,7 +843,8 @@ rar2020.srt.pvn$age <-
 rar2020.srt.pvn <- subset(rar2020.srt.pvn, subset = stage %in% c("Pubertal", "Adult"))
 ```
 
-We subset Romanov et al., 2020 dataset to only Pubertal and Adult stages.
+We subset Romanov et al., 2020 dataset to only Pubertal and Adult
+stages.
 
 ```{r}
 #| label: plot-romanov2020-pvn-feature-np-split-by-stages
@@ -821,15 +854,16 @@ FeaturePlot_scCustom(
   rar2020.srt.pvn,
   reduction = "umap",
   features = c(
-    "Oxt", 
-    "Avp", 
-    "Sst", 
-    "Crh", 
-    "Trh"),
-  na_cutoff = 2, 
+    "Oxt",
+    "Avp",
+    "Sst",
+    "Crh",
+    "Trh"
+  ),
+  na_cutoff = 2,
   label = F,
   num_columns = 5
-  ) * NoLegend()
+) * NoLegend()
 ```
 
 ```{r}
@@ -837,19 +871,17 @@ FeaturePlot_scCustom(
 #| fig-width: 18
 #| fig-height: 21
 FeaturePlot_scCustom(
-  rar2020.srt.pvn, 
-  reduction = "umap", 
+  rar2020.srt.pvn,
+  reduction = "umap",
   features = c(
-    metabolic_signaling_genes, 
+    metabolic_signaling_genes,
     opioid_system_genes,
     "Slc17a6", "Gad1", "Gad2", "Crh", "Trh", "Oxt", "Sst"
-    ),
+  ),
   label = F,
   num_columns = 4
-  ) * NoLegend()
+) * NoLegend()
 ```
-
-
 
 ```{r}
 #| label: e-metabolic-representation-romanov2020-pvn
@@ -883,7 +915,6 @@ content_sbs_mtx_romanov <-
   bind_cols(
     rar2020.srt.pvn@meta.data |> select(wtree, age, stage)
   )
-
 ```
 
 #### All
@@ -895,8 +926,8 @@ content_sbs_mtx_romanov <-
 upset(
   as.data.frame(
     content_sbs_mtx_romanov |>
-    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -920,9 +951,9 @@ upset(
 upset(
   as.data.frame(
     content_sbs_mtx_romanov |>
-    filter(stage == "Pubertal") |>
-    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+      filter(stage == "Pubertal") |>
+      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -946,9 +977,9 @@ upset(
 upset(
   as.data.frame(
     content_sbs_mtx_romanov |>
-    filter(stage == "Adult") |>
-    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+      filter(stage == "Adult") |>
+      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -978,7 +1009,6 @@ content_sbs_mtx <-
     content_sbs_mtx_kim |> select(all_of(to_select)),
     content_sbs_mtx_romanov |> select(all_of(to_select))
   )
-
 ```
 
 #### All
@@ -990,8 +1020,8 @@ content_sbs_mtx <-
 upset(
   as.data.frame(
     content_sbs_mtx |>
-    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1015,9 +1045,9 @@ upset(
 upset(
   as.data.frame(
     content_sbs_mtx |>
-    filter(stage == "Pubertal") |>
-    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+      filter(stage == "Pubertal") |>
+      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1032,10 +1062,10 @@ upset(
 )
 
 skim(as.data.frame(
-    content_sbs_mtx |>
+  content_sbs_mtx |>
     filter(stage == "Pubertal") |>
     select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt")))
-  ))
+))
 ```
 
 ```{r}
@@ -1045,10 +1075,11 @@ skim(as.data.frame(
 upset(
   as.data.frame(
     content_sbs_mtx |>
-    filter(stage == "Pubertal") |>
-    select(any_of(c(
-      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+      filter(stage == "Pubertal") |>
+      select(any_of(c(
+        opioid_system_genes, "Crh", "Trh", "Oxt"
+      ))) |>
+      select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1063,12 +1094,13 @@ upset(
 )
 
 skim(as.data.frame(
-    content_sbs_mtx |>
+  content_sbs_mtx |>
     filter(stage == "Pubertal") |>
     select(any_of(c(
-      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+      opioid_system_genes, "Crh", "Trh", "Oxt"
+    ))) |>
     select(where(~ is.numeric(.x) && sum(.x) > 0))
-  ))
+))
 ```
 
 ```{r}
@@ -1078,11 +1110,12 @@ skim(as.data.frame(
 upset(
   as.data.frame(
     content_sbs_mtx |>
-    filter(stage == "Pubertal") |>
-    select(any_of(c(
-      metabolic_signaling_genes,
-      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+      filter(stage == "Pubertal") |>
+      select(any_of(c(
+        metabolic_signaling_genes,
+        opioid_system_genes, "Crh", "Trh", "Oxt"
+      ))) |>
+      select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1097,13 +1130,14 @@ upset(
 )
 
 skim(as.data.frame(
-    content_sbs_mtx |>
+  content_sbs_mtx |>
     filter(stage == "Pubertal") |>
     select(any_of(c(
       metabolic_signaling_genes,
-      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+      opioid_system_genes, "Crh", "Trh", "Oxt"
+    ))) |>
     select(where(~ is.numeric(.x) && sum(.x) > 0))
-  ))
+))
 ```
 
 #### Adult
@@ -1115,9 +1149,9 @@ skim(as.data.frame(
 upset(
   as.data.frame(
     content_sbs_mtx |>
-    filter(stage == "Adult") |>
-    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+      filter(stage == "Adult") |>
+      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1132,11 +1166,11 @@ upset(
 )
 
 skim(as.data.frame(
-    content_sbs_mtx |>
+  content_sbs_mtx |>
     filter(stage == "Adult") |>
-    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
     select(where(~ is.numeric(.x) && sum(.x) > 0))
-  ))
+))
 ```
 
 ```{r}
@@ -1146,9 +1180,9 @@ skim(as.data.frame(
 upset(
   as.data.frame(
     content_sbs_mtx |>
-    filter(stage == "Adult") |>
-    select(any_of(c(opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+      filter(stage == "Adult") |>
+      select(any_of(c(opioid_system_genes, "Crh", "Trh", "Oxt"))) |>
+      select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1163,11 +1197,11 @@ upset(
 )
 
 skim(as.data.frame(
-    content_sbs_mtx |>
+  content_sbs_mtx |>
     filter(stage == "Adult") |>
-    select(any_of(c(opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(any_of(c(opioid_system_genes, "Crh", "Trh", "Oxt"))) |>
     select(where(~ is.numeric(.x) && sum(.x) > 0))
-  ))
+))
 ```
 
 ```{r}
@@ -1177,11 +1211,12 @@ skim(as.data.frame(
 upset(
   as.data.frame(
     content_sbs_mtx |>
-    filter(stage == "Adult") |>
-    select(any_of(c(
-      metabolic_signaling_genes,
-      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+      filter(stage == "Adult") |>
+      select(any_of(c(
+        metabolic_signaling_genes,
+        opioid_system_genes, "Crh", "Trh", "Oxt"
+      ))) |>
+      select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1196,19 +1231,17 @@ upset(
 )
 
 skim(as.data.frame(
-    content_sbs_mtx |>
+  content_sbs_mtx |>
     filter(stage == "Adult") |>
     select(any_of(c(
       metabolic_signaling_genes,
-      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+      opioid_system_genes, "Crh", "Trh", "Oxt"
+    ))) |>
     select(where(~ is.numeric(.x) && sum(.x) > 0))
-  ))
+))
 ```
-
 
 ```{r}
 #| label: session-info
 sessioninfo::session_info()
-
 ```
-
