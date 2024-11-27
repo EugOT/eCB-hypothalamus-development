@@ -1,5 +1,5 @@
 ---
-title: "eCB expression analysis of Hypothalamus development with focus on PVN"
+title: "Metabolic and opioid system expression analysis of Pubertal and Adult Hypothalamus with focus on PVN"
 author: "Evgenii O. Tretiakov"
 date: "`r Sys.Date()`"
 format:
@@ -12,6 +12,7 @@ format:
     fig-format: retina
     fig-responsive: true
     fig-dpi: 300
+    embed-resources: true
   pdf:
     colorlinks: true
     fontsize: 12pt
@@ -34,7 +35,7 @@ knitr:
 ```{r}
 #| label: setup
 #| include: false
-DOCNAME <- "endo-cb"
+DOCNAME <- "metabolic-and-opioids-in-pvn-neurons"
 NOW <- Sys.time()
 
 # Time chunks during knitting
@@ -169,6 +170,52 @@ metric <- "euclidean"
 signature <- 100
 ```
 
+
+```{r}
+#| label: opioid-system-genes
+opioid_system_genes <- c(
+    # Classical opioid receptors
+    "Oprd1",  # Delta opioid receptor
+    "Oprk1",  # Kappa opioid receptor 
+    "Oprl1",  # Nociceptin/orphanin FQ receptor
+    "Oprm1",  # Mu opioid receptor
+    
+    # Processing enzymes
+    "Pcsk1",  # Proprotein convertase 1
+    "Pcsk2",   # Proprotein convertase 2
+    
+    # Endogenous opioid precursors
+    "Pdyn",   # Prodynorphin
+    "Penk",   # Proenkephalin
+    #"Pomc",   # Proopiomelanocortin
+    "Pnoc"   # Prepronociceptin
+)
+```
+
+```{r}
+#| label: metabolic-signaling-genes
+metabolic_signaling_genes <- c(
+    # Receptor tyrosine kinases and ligands
+    "Alk",      # Anaplastic lymphoma kinase - neural development, metabolism
+    "Fam150a",  # ALK ligand 1/Augmentor-α - ALK receptor activator
+    "Fam150b",  # ALK ligand 2/Augmentor-β - ALK receptor activator
+    
+    # Melanocortin system
+    "Mc3r",     # Melanocortin 3 receptor - energy homeostasis, inflammation
+    "Mc4r",     # Melanocortin 4 receptor - appetite control, energy balance
+    
+    # Metabolic hormone receptors
+    "Lepr",     # Leptin receptor - energy balance, satiety
+    "Insr",     # Insulin receptor - glucose homeostasis
+    #"Igf1r",    # Insulin-like growth factor 1 receptor - growth, development
+    
+    # Signaling adaptors/regulators
+    "Lmo4",     # LIM domain only 4 - transcriptional regulation, metabolism
+    "Irs1",     # Insulin receptor substrate 1 - insulin signaling
+    "Irs4"      # Insulin receptor substrate 4 - insulin/leptin signaling
+)
+```
+
 ## Load Kim DW et al 2020
 
 ```{r}
@@ -283,7 +330,7 @@ rar2020.srt.pub$age %>% forcats::fct_count()
 #| fig-height: 36
 FeaturePlot(
   rar2020.srt.pub,
-  features = c(neurotrans, cnbn),
+  features = c(neurotrans, metabolic_signaling_genes, "Crh", "Trh", "Oxt"),
   label = F,
   blend = F,
   order = TRUE,
@@ -342,7 +389,7 @@ upset(
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
   nintersects = 30,
-  sets = c(cnbn) %>%
+  sets = c(metabolic_signaling_genes, "Crh", "Trh", "Oxt") %>%
     .[. %in% colnames(content_sbs_mtx)],
   empty.intersections = NULL
 )
@@ -360,7 +407,7 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 15,
-  sets = c(cnbn) %>%
+  sets = c(metabolic_signaling_genes, "Crh", "Trh", "Oxt") %>%
     .[. %in% colnames(content_sbs_mtx)],
   nintersects = 20,
   empty.intersections = NULL
@@ -370,7 +417,7 @@ upset(
 ```{r}
 #| label: merge-metadata-and-expression
 sbs_mtx_full <- content_sbs_mtx |>
-  select(any_of(c(neurotrans, cnbn))) |>
+  select(any_of(c(neurotrans, metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
   dplyr::bind_cols(rar2020.srt.pub@meta.data)
 
 sbs_mtx_full |> glimpse()
@@ -411,6 +458,23 @@ srt <- ProjectUMAP(
 )
 Idents(srt) <- srt$Cluster
 ```
+
+
+```{r}
+all.genes <- rownames(srt)
+gene.scale <- c(
+  cnbn,
+  opioid_system_genes,
+  metabolic_signaling_genes,
+  np,
+  npr,
+  nmr,
+  neurotrans
+  ) |> 
+  unique() %>%
+  .[. %in% all.genes]
+```
+
 
 ```{r}
 #| label: plot-reference-umap-transfered
@@ -487,12 +551,6 @@ p2 <- FeaturePlot_scCustom(
 (p1 / p2)
 ```
 
-```{r}
-#| label: ref-embedding-split-age
-#| fig-height: 18
-#| fig-width: 21
-FeaturePlot_scCustom(srt, reduction = "ref.umap", features = c("Cnr1"), split.by = "Age", label = F, num_columns = 4) * NoLegend()
-```
 
 ```{r}
 #| label: ref-embedding-split-stage-kim2020-np
@@ -564,6 +622,8 @@ srt <- subset(srt, subset = refUMAP_1 > 4 & refUMAP_2 > -1)
 
 srt@meta.data <- srt@meta.data |> rename(wtree = predicted.id, age = Age)
 
+srt <- subset(srt, subset = stage %in% c("Pubertal", "Adult"))
+
 srt
 ```
 
@@ -573,8 +633,8 @@ srt
 
 ```{r}
 #| label: plot-kim2020-pvn-feature-np-split-by-stages
-#| fig-height: 16.36363636
-#| fig-width: 18
+#| fig-height: 3
+#| fig-width: 21
 FeaturePlot_scCustom(
   srt,
   reduction = "ref.umap",
@@ -584,18 +644,27 @@ FeaturePlot_scCustom(
     "Sst", 
     "Crh", 
     "Trh"), 
-  split.by = "stage", 
   na_cutoff = 2, 
   label = F,
-  num_columns = 4
+  num_columns = 5
   ) * NoLegend()
 ```
 
 ```{r}
-#| label: plot-kim2020-pvn-feature-cb-split-by-stages
+#| label: plot-kim2020-pvn-feature-metabopioid-split-by-stages
 #| fig-width: 18
-#| fig-height: 36
-FeaturePlot_scCustom(srt, reduction = "ref.umap", features = c(cnbn), split.by = "stage", label = F, num_columns = 4) * NoLegend()
+#| fig-height: 21
+FeaturePlot_scCustom(
+  srt, 
+  reduction = "ref.umap", 
+  features = c(
+    metabolic_signaling_genes, 
+    opioid_system_genes,
+    "Slc17a6", "Gad1", "Gad2", "Crh", "Trh", "Oxt", "Sst"
+    ),
+  label = F,
+  num_columns = 4
+  ) * NoLegend()
 ```
 
 ```{r}
@@ -643,9 +712,12 @@ content_sbs_mtx_kim <-
 #| fig-height: 24
 #| fig-asp: 1.214
 upset(
-  as.data.frame(content_sbs_mtx_kim),
+  as.data.frame(
+    content_sbs_mtx_kim |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
+  ),
   order.by = "freq",
-  group.by = "sets",
   cutoff = 3,
   sets.x.label = "Number of cells",
   number.angles = 0,
@@ -653,67 +725,11 @@ upset(
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
   nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_kim)],
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
 
-#### Embryonic
-
-```{r}
-#| label: upset-group-e-cb-kim2020-pvn-Embryonic
-#| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(
-    content_sbs_mtx_kim |>
-      filter(stage == "Embryonic") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_kim)]
-      )
-  ),
-  order.by = "freq",
-  group.by = "sets",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_kim)],
-  empty.intersections = F
-)
-```
-
-#### Neonatal
-
-```{r}
-#| label: upset-group-e-cb-kim2020-pvn-Neonatal
-#| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(
-    content_sbs_mtx_kim |>
-      filter(stage == "Neonatal") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_kim)]
-      )
-  ),
-  order.by = "freq",
-  group.by = "sets",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_kim)],
-  empty.intersections = F
-)
-```
 
 #### Pubertal
 
@@ -724,13 +740,11 @@ upset(
 upset(
   as.data.frame(
     content_sbs_mtx_kim |>
-      filter(stage == "Pubertal") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_kim)]
-      )
+    filter(stage == "Pubertal") |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
-  group.by = "sets",
   cutoff = 3,
   sets.x.label = "Number of cells",
   number.angles = 0,
@@ -738,8 +752,7 @@ upset(
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
   nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_kim)],
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
@@ -753,13 +766,11 @@ upset(
 upset(
   as.data.frame(
     content_sbs_mtx_kim |>
-      filter(stage == "Adult") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_kim)]
-      )
+    filter(stage == "Adult") |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
-  group.by = "sets",
   cutoff = 3,
   sets.x.label = "Number of cells",
   number.angles = 0,
@@ -767,9 +778,8 @@ upset(
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
   nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_kim)],
-  empty.intersections = F
+  sets = colnames(data),
+  empty.intersections = NULL
 )
 ```
 
@@ -795,12 +805,14 @@ rar2020.srt.pvn$age <-
     from = c("E15", "E17", "P0", "P2", "3P2", "1P10", "P10", "P23"),
     to = c("E15", "E17", "P00", "P02", "P02", "P10", "P10", "P23")
   )
+
+rar2020.srt.pvn <- subset(rar2020.srt.pvn, subset = stage %in% c("Pubertal", "Adult"))
 ```
 
 ```{r}
 #| label: plot-romanov2020-pvn-feature-np-split-by-stages
-#| fig-width: 18
-#| fig-height: 16.36363636
+#| fig-width: 21
+#| fig-height: 3
 FeaturePlot_scCustom(
   rar2020.srt.pvn,
   reduction = "umap",
@@ -809,38 +821,31 @@ FeaturePlot_scCustom(
     "Avp", 
     "Sst", 
     "Crh", 
-    "Trh"), 
-  split.by = "stage", 
+    "Trh"),
   na_cutoff = 2, 
   label = F,
-  num_columns = 4
+  num_columns = 5
   ) * NoLegend()
 ```
 
 ```{r}
 #| label: plot-romanov2020-pvn-feature-cb-split-by-stages
 #| fig-width: 18
-#| fig-height: 36
-FeaturePlot_scCustom(rar2020.srt.pvn, reduction = "umap", features = c(cnbn), split.by = "stage", label = F, num_columns = 4) * NoLegend()
-```
-
-
-```{r}
-#| label: plot-feature-cb-romanov2020-pvn
-#| fig-width: 18
-#| fig-height: 36
-FeaturePlot(
-  rar2020.srt.pvn,
-  features = c(cnbn),
+#| fig-height: 21
+FeaturePlot_scCustom(
+  rar2020.srt.pvn, 
+  reduction = "umap", 
+  features = c(
+    metabolic_signaling_genes, 
+    opioid_system_genes,
+    "Slc17a6", "Gad1", "Gad2", "Crh", "Trh", "Oxt", "Sst"
+    ),
   label = F,
-  blend = F,
-  order = TRUE,
-  pt.size = 1.2,
-  raster.dpi = c(1024, 1024),
-  alpha = 0.5,
-  split.by = "age"
-)
+  num_columns = 4
+  ) * NoLegend()
 ```
+
+
 
 ```{r}
 #| label: e-cb-representation-romanov2020-pvn
@@ -882,36 +887,12 @@ content_sbs_mtx_romanov <-
 ```{r}
 #| label: upset-group-e-cb-romanov2020-pvn
 #| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(content_sbs_mtx_romanov),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_romanov)],
-  empty.intersections = NULL
-)
-```
-
-#### Embryonic
-
-```{r}
-#| label: upset-group-e-cb-romanov2020-pvn-Embryonic
-#| fig-height: 24
-#| fig-asp: 1.214
+#| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx_romanov |>
-      filter(stage == "Embryonic") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_romanov)]
-      )
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -920,37 +901,8 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_romanov)],
-  empty.intersections = NULL
-)
-```
-
-#### Neonatal
-
-```{r}
-#| label: upset-group-e-cb-romanov2020-pvn-Neonatal
-#| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(
-    content_sbs_mtx_romanov |>
-      filter(stage == "Neonatal") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_romanov)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_romanov)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
@@ -960,14 +912,13 @@ upset(
 ```{r}
 #| label: upset-group-e-cb-romanov2020-pvn-Pubertal
 #| fig-height: 24
-#| fig-asp: 1.214
+#| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx_romanov |>
-      filter(stage == "Pubertal") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_romanov)]
-      )
+    filter(stage == "Pubertal") |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -976,9 +927,8 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_romanov)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
@@ -987,15 +937,14 @@ upset(
 
 ```{r}
 #| label: upset-group-e-cb-romanov2020-pvn-Adult
-#| fig-height: 24
-#| fig-asp: 1.214
+#| fig-height: 18
+#| fig-width: 24
 upset(
   as.data.frame(
     content_sbs_mtx_romanov |>
-      filter(stage == "Adult") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_romanov)]
-      )
+    filter(stage == "Adult") |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1004,9 +953,8 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_romanov)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
@@ -1017,7 +965,7 @@ upset(
 #| label: e-cb-representation-pvn
 # Prepare table of intersection sets analysis
 to_select <-
-  c(cnbn, "Oxt", "Crh", "Trh", "Avp", "Sst", "wtree", "age", "stage") %>%
+  c(gene.scale, "wtree", "age", "stage") %>%
   .[. %in% colnames(content_sbs_mtx_kim)] %>%
   .[. %in% colnames(content_sbs_mtx_romanov)]
 
@@ -1034,37 +982,12 @@ content_sbs_mtx <-
 ```{r}
 #| label: upset-group-e-cb-pvn
 #| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(content_sbs_mtx),
-  order.by = "freq",
-  group.by = "sets",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-#### Embryonic
-
-```{r}
-#| label: upset-group-e-cb-pvn-Embryonic
-#| fig-height: 24
-#| fig-asp: 1.214
+#| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Embryonic") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1073,284 +996,24 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
-```
-
-```{r}
-#| label: upset-group-e-cb-pvn-Embryonic-f2
-#| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Embryonic") |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Embryonic") |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
-
-```{r}
-#| label: upset-group-e-cb-pvn-Embryonic-f3
-#| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Embryonic") |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Embryonic") |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
-
-```{r}
-#| label: upset-group-e-cb-pvn-Embryonic-f4
-#| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Embryonic") |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Embryonic") |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
-
-#### Neonatal
-
-```{r}
-#| label: upset-group-e-cb-pvn-Neonatal
-#| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Neonatal") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-```{r}
-#| label: upset-group-e-cb-pvn-Neonatal-f2
-#| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Neonatal") |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Neonatal") |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
-
-```{r}
-#| label: upset-group-e-cb-pvn-Neonatal-f3
-#| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Neonatal") |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Neonatal") |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
-
-```{r}
-#| label: upset-group-e-cb-pvn-Neonatal-f4
-#| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Neonatal") |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Neonatal") |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
 ```
 
 #### Pubertal
 
 ```{r}
-#| label: upset-group-e-cb-pvn-Pubertal
-#| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-```{r}
 #| label: upset-group-e-cb-pvn-Pubertal-f2
 #| fig-height: 24
-#| fig-asp: 1.214
+#| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Pubertal") |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1359,32 +1022,29 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 
 skim(as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Pubertal") |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt")))
   ))
 ```
 
 ```{r}
 #| label: upset-group-e-cb-pvn-Pubertal-f3
 #| fig-height: 24
-#| fig-asp: 1.214
+#| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Pubertal") |>
+    select(any_of(c(
+      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1393,32 +1053,32 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 
 skim(as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Pubertal") |>
+    select(any_of(c(
+      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ))
 ```
 
 ```{r}
 #| label: upset-group-e-cb-pvn-Pubertal-f4
 #| fig-height: 24
-#| fig-asp: 1.214
+#| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Pubertal") |>
+    select(any_of(c(
+      metabolic_signaling_genes,
+      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1427,60 +1087,33 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 
 skim(as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Pubertal") |>
+    select(any_of(c(
+      metabolic_signaling_genes,
+      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ))
 ```
 
 #### Adult
 
 ```{r}
-#| label: upset-group-e-cb-pvn-Adult
-#| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-```{r}
 #| label: upset-group-e-cb-pvn-Adult-f2
 #| fig-height: 24
-#| fig-asp: 1.214
+#| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Adult") |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1489,32 +1122,29 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 
 skim(as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Adult") |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ))
 ```
 
 ```{r}
 #| label: upset-group-e-cb-pvn-Adult-f3
 #| fig-height: 24
-#| fig-asp: 1.214
+#| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Adult") |>
+    select(any_of(c(opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1523,32 +1153,31 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 
 skim(as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Adult") |>
+    select(any_of(c(opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ))
 ```
 
 ```{r}
 #| label: upset-group-e-cb-pvn-Adult-f4
 #| fig-height: 24
-#| fig-asp: 1.214
+#| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Adult") |>
+    select(any_of(c(
+      metabolic_signaling_genes,
+      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1558,272 +1187,25 @@ upset(
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
   nintersects = 30,
-  sets = c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
+  sets = colnames(data),
   empty.intersections = NULL
 )
 
 skim(as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Adult") |>
+    select(any_of(c(
+      metabolic_signaling_genes,
+      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ))
 ```
 
-### Contingency tables
-
-```{r}
-#| label: n-cells-by-age-pvn
-rar2020.srt.pvn$age %>% forcats::fct_count()
-
-rar2020.srt.pvn$stage %>% forcats::fct_count()
-
-srt$age %>% forcats::fct_count()
-
-srt$stage %>% forcats::fct_count()
-```
-
-## Load selected astrocytes data from Lopez JP et al (2021)
-
-```{r load-lopez2021-PVN-data, cache = FALSE}
-anndata <- sc$read(here(
-  "../1_heteroAstrocytes/PRJNA679294/data/",
-  "class_cello/PRJNA679294-whole_dataset-0.001-cello_annotation.h5ad"
-))
-```
-
-### Convert adata object to R AnnDataR6 object.
-```{r convert-lopez2021-PVN-to-r}
-adata <- py_to_r(anndata)
-class(adata)
-class(adata$X)
-adata
-```
-
-```{r convert-lopez2021-PVN-to-seurat}
-expr_mtx <- t(as.matrix(adata$raw$X))
-colnames(expr_mtx) <- rownames(adata$X)
-rownames(expr_mtx) <- adata$var_names
-srt <- CreateSeuratObject(
-  expr_mtx,
-  assay = "RNA",
-  project = "individual_hypothalamic_nuclei_astrocytes_evaluation_dataset",
-  meta.data = as.data.frame(adata$obs)
-)
-
-Idents(srt) <- "ora_celltype"
-srt <- subset(srt, idents = c("Astrocytes"))
-
-Idents(srt) <- "libname"
-
-print(srt)
-rm(adata, anndata, expr_mtx)
-invisible(gc())
-```
-
-```{r scale-astro-data}
-srt <- NormalizeData(srt)
-srt <- FindVariableFeatures(srt, selection.method = "vst", nfeatures = 5000)
-all.genes <- rownames(srt)
-srt <- ScaleData(srt, features = c(VariableFeatures(srt), cnbn))
-```
-
-```{r}
-srt <- RunPCA(srt, npcs = 50, verbose = FALSE)
-srt <-
-  srt |>
-  FindNeighbors(
-    dims = 1:40,
-    k.param = 40,
-    annoy.metric = "cosine",
-    n.trees = 100,
-    verbose = FALSE
-  ) |>
-  RunUMAP(
-    dims = 1:50,
-    reduction.name = "umap",
-    reduction.key = "UMAP_",
-    return.model = F,
-    n.epochs = 1000L,
-    n.neighbors = 50,
-    min.dist = 0.5,
-    metric = "cosine",
-    seed.use = reseed,
-    verbose = FALSE
-  )
-```
-
-```{r}
-#| label: plot-lopez2021-pvn-condit-astro
-#| fig-width: 6
-#| fig-height: 7
-DimPlot(srt)
-```
-
-
-```{r}
-#| label: plot-lopez2021-pvn-feature-cb
-#| fig-width: 18
-#| fig-height: 13
-FeaturePlot_scCustom(
-  srt,
-  reduction = "umap",
-  features = c(
-    "Cnr1", "Cnr2", "Gpr55", "Slc1a3",
-    "Dagla", "Daglb", "Mgll", "Gfap",
-    "Napepld", "Gde1", "Faah", "Aldh1l1"
-    ),
-  label = F,
-  num_columns = 4
-) * NoLegend()
-```
-
-
-```{r}
-#| label: e-cb-representation-lopez2021-pvn
-sbs_mtx <-
-  srt@assays$RNA@layers$data %>%
-  as.data.frame() %>%
-  t()
-
-rownames(sbs_mtx) <- colnames(srt)
-colnames(sbs_mtx) <- rownames(srt)
-
-# Filter features
-filt_low_genes <-
-  colSums(sbs_mtx) %>%
-  .[. > quantile(., 0.4)] %>%
-  names()
-sbs_mtx %<>% .[, filt_low_genes]
-
-min_filt_vector2 <-
-  sbs_mtx %>%
-  as_tibble() %>%
-  select(all_of(filt_low_genes)) %>%
-  summarise(across(.fns = ~ quantile(.x, .005))) %>%
-  as.list() %>%
-  map(as.double) %>%
-  simplify() %>%
-  .[filt_low_genes]
-
-# Prepare table of intersection sets analysis
-content_sbs_mtx <-
-  (sbs_mtx > min_filt_vector2) %>%
-  as_tibble() %>%
-  mutate_all(as.numeric) %>%
-  bind_cols(
-    srt@meta.data |> select(condit)
-  )
-
-```
-
-```{r}
-#| label: upset-group-e-cb-pvn-Adult-f2-astro-norm
-#| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(condit == 0) |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Cnr1", "Cnr2", "Gpr55", "Slc1a3", "Gfap", "Aldh1l1") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(condit == 0) |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
-
-```{r}
-#| label: upset-group-e-cb-pvn-Adult-f3-astro-norm
-#| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(condit == 0) |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Dagla", "Daglb", "Mgll", "Slc1a3", "Gfap", "Aldh1l1") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(condit == 0) |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
-
-```{r}
-#| label: upset-group-e-cb-pvn-Adult-f4-astro-norm
-#| fig-height: 24
-#| fig-asp: 1.214
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(condit == 0) |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Napepld", "Gde1", "Faah", "Slc1a3", "Gfap", "Aldh1l1") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(condit == 0) |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
 
 ```{r}
 #| label: session-info
 sessioninfo::session_info()
 
 ```
+
 

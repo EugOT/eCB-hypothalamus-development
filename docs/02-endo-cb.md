@@ -1,7 +1,7 @@
 ---
 title: "eCB expression analysis of Hypothalamus development with focus on PVN"
 author: "Evgenii O. Tretiakov"
-date: "2024-11-26"
+date: "2024-11-27"
 format:
   html:
     toc: true
@@ -12,6 +12,7 @@ format:
     fig-format: retina
     fig-responsive: true
     fig-dpi: 300
+    embed-resources: true
   pdf:
     colorlinks: true
     fontsize: 12pt
@@ -157,6 +158,55 @@ connectivity_model <- "min_tree"
 k <- 10
 metric <- "euclidean"
 signature <- 100
+```
+:::
+
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
+opioid_system_genes <- c(
+    # Classical opioid receptors
+    "Oprd1",  # Delta opioid receptor
+    "Oprk1",  # Kappa opioid receptor 
+    "Oprl1",  # Nociceptin/orphanin FQ receptor
+    "Oprm1",  # Mu opioid receptor
+    
+    # Processing enzymes
+    "Pcsk1",  # Proprotein convertase 1
+    "Pcsk2",   # Proprotein convertase 2
+    
+    # Endogenous opioid precursors
+    "Pdyn",   # Prodynorphin
+    "Penk",   # Proenkephalin
+    #"Pomc",   # Proopiomelanocortin
+    "Pnoc"   # Prepronociceptin
+)
+```
+:::
+
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
+metabolic_signaling_genes <- c(
+    # Receptor tyrosine kinases and ligands
+    "Alk",      # Anaplastic lymphoma kinase - neural development, metabolism
+    "Fam150a",  # ALK ligand 1/Augmentor-α - ALK receptor activator
+    "Fam150b",  # ALK ligand 2/Augmentor-β - ALK receptor activator
+    
+    # Melanocortin system
+    "Mc3r",     # Melanocortin 3 receptor - energy homeostasis, inflammation
+    "Mc4r",     # Melanocortin 4 receptor - appetite control, energy balance
+    
+    # Metabolic hormone receptors
+    "Lepr",     # Leptin receptor - energy balance, satiety
+    "Insr",     # Insulin receptor - glucose homeostasis
+    #"Igf1r",    # Insulin-like growth factor 1 receptor - growth, development
+    
+    # Signaling adaptors/regulators
+    "Lmo4",     # LIM domain only 4 - transcriptional regulation, metabolism
+    "Irs1",     # Insulin receptor substrate 1 - insulin signaling
+    "Irs4"      # Insulin receptor substrate 4 - insulin/leptin signaling
+)
 ```
 :::
 
@@ -413,7 +463,7 @@ rar2020.srt.pub$age %>% forcats::fct_count()
 ```{.r .cell-code}
 FeaturePlot(
   rar2020.srt.pub,
-  features = c(neurotrans, cnbn),
+  features = c(neurotrans, metabolic_signaling_genes, "Crh", "Trh", "Oxt"),
   label = F,
   blend = F,
   order = TRUE,
@@ -477,7 +527,7 @@ upset(
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
   nintersects = 30,
-  sets = c(cnbn) %>%
+  sets = c(metabolic_signaling_genes, "Crh", "Trh", "Oxt") %>%
     .[. %in% colnames(content_sbs_mtx)],
   empty.intersections = NULL
 )
@@ -499,7 +549,7 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 15,
-  sets = c(cnbn) %>%
+  sets = c(metabolic_signaling_genes, "Crh", "Trh", "Oxt") %>%
     .[. %in% colnames(content_sbs_mtx)],
   nintersects = 20,
   empty.intersections = NULL
@@ -515,7 +565,7 @@ upset(
 
 ```{.r .cell-code}
 sbs_mtx_full <- content_sbs_mtx |>
-  select(any_of(c(neurotrans, cnbn))) |>
+  select(any_of(c(neurotrans, metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
   dplyr::bind_cols(rar2020.srt.pub@meta.data)
 
 sbs_mtx_full |> glimpse()
@@ -533,15 +583,15 @@ $ Slc1a6           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,�
 $ Gad1             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0,…
 $ Slc32a1          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
 $ Slc6a1           <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Cnr1             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Gpr55            <dbl> 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Dagla            <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Daglb            <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Mgll             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Faah             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Napepld          <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
-$ Gde1             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,…
-$ Pparg            <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Alk              <dbl> 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,…
+$ Mc4r             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Lepr             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Lmo4             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1,…
+$ Irs1             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Irs4             <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Crh              <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Trh              <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
+$ Oxt              <dbl> 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,…
 $ nGene            <int> 1652, 782, 447, 1706, 1106, 894, 727, 734, 669, 617, …
 $ nUMI             <dbl> 2787, 1090, 544, 2709, 1817, 1220, 995, 1036, 920, 86…
 $ orig.ident       <fct> Hypothalamus, Hypothalamus, Hypothalamus, Hypothalamu…
@@ -620,6 +670,24 @@ srt <- ProjectUMAP(
   reference.reduction = "pca", reduction.model = "umap"
 )
 Idents(srt) <- srt$Cluster
+```
+:::
+
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
+all.genes <- rownames(srt)
+gene.scale <- c(
+  cnbn,
+  opioid_system_genes,
+  metabolic_signaling_genes,
+  np,
+  npr,
+  nmr,
+  neurotrans
+  ) |> 
+  unique() %>%
+  .[. %in% all.genes]
 ```
 :::
 
@@ -715,17 +783,6 @@ p2 <- FeaturePlot_scCustom(
 ::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
-FeaturePlot_scCustom(srt, reduction = "ref.umap", features = c("Cnr1"), split.by = "Age", label = F, num_columns = 4) * NoLegend()
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/ref-embedding-split-age-1.png){fig-align='center' width=6300}
-:::
-:::
-
-::: {.cell layout-align="center"}
-
-```{.r .cell-code}
 srt$stage <-
   srt$Age %>%
   forcats::fct_collapse(
@@ -801,13 +858,15 @@ srt <- subset(srt, subset = refUMAP_1 > 4 & refUMAP_2 > -1)
 
 srt@meta.data <- srt@meta.data |> rename(wtree = predicted.id, age = Age)
 
+srt <- subset(srt, subset = stage %in% c("Pubertal", "Adult"))
+
 srt
 ```
 
 ::: {.cell-output .cell-output-stdout}
 ```
 An object of class Seurat 
-27998 features across 4555 samples within 1 assay 
+27998 features across 950 samples within 1 assay 
 Active assay: RNA (27998 features, 3000 variable features)
  3 layers present: counts, data, scale.data
  3 dimensional reductions calculated: umap, ref.pca, ref.umap
@@ -833,26 +892,35 @@ FeaturePlot_scCustom(
     "Sst", 
     "Crh", 
     "Trh"), 
-  split.by = "stage", 
   na_cutoff = 2, 
   label = F,
-  num_columns = 4
+  num_columns = 5
   ) * NoLegend()
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-kim2020-pvn-feature-np-split-by-stages-1.png){fig-align='center' width=5400}
+![](02-endo-cb_files/figure-html/plot-kim2020-pvn-feature-np-split-by-stages-1.png){fig-align='center' width=6300}
 :::
 :::
 
 ::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
-FeaturePlot_scCustom(srt, reduction = "ref.umap", features = c(cnbn), split.by = "stage", label = F, num_columns = 4) * NoLegend()
+FeaturePlot_scCustom(
+  srt, 
+  reduction = "ref.umap", 
+  features = c(
+    metabolic_signaling_genes, 
+    opioid_system_genes,
+    "Slc17a6", "Gad1", "Gad2", "Crh", "Trh", "Oxt", "Sst"
+    ),
+  label = F,
+  num_columns = 4
+  ) * NoLegend()
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-kim2020-pvn-feature-cb-split-by-stages-1.png){fig-align='center' width=5400}
+![](02-endo-cb_files/figure-html/plot-kim2020-pvn-feature-metabopioid-split-by-stages-1.png){fig-align='center' width=5400}
 :::
 :::
 
@@ -903,9 +971,12 @@ content_sbs_mtx_kim <-
 
 ```{.r .cell-code}
 upset(
-  as.data.frame(content_sbs_mtx_kim),
+  as.data.frame(
+    content_sbs_mtx_kim |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
+  ),
   order.by = "freq",
-  group.by = "sets",
   cutoff = 3,
   sets.x.label = "Number of cells",
   number.angles = 0,
@@ -913,8 +984,7 @@ upset(
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
   nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_kim)],
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
@@ -924,73 +994,6 @@ upset(
 :::
 :::
 
-
-#### Embryonic
-
-
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(
-    content_sbs_mtx_kim |>
-      filter(stage == "Embryonic") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_kim)]
-      )
-  ),
-  order.by = "freq",
-  group.by = "sets",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_kim)],
-  empty.intersections = F
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-kim2020-pvn-Embryonic-1.png){fig-align='center' width=4200}
-:::
-:::
-
-
-#### Neonatal
-
-
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(
-    content_sbs_mtx_kim |>
-      filter(stage == "Neonatal") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_kim)]
-      )
-  ),
-  order.by = "freq",
-  group.by = "sets",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_kim)],
-  empty.intersections = F
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-kim2020-pvn-Neonatal-1.png){fig-align='center' width=4200}
-:::
-:::
 
 
 #### Pubertal
@@ -1002,13 +1005,11 @@ upset(
 upset(
   as.data.frame(
     content_sbs_mtx_kim |>
-      filter(stage == "Pubertal") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_kim)]
-      )
+    filter(stage == "Pubertal") |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
-  group.by = "sets",
   cutoff = 3,
   sets.x.label = "Number of cells",
   number.angles = 0,
@@ -1016,8 +1017,7 @@ upset(
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
   nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_kim)],
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
@@ -1037,13 +1037,11 @@ upset(
 upset(
   as.data.frame(
     content_sbs_mtx_kim |>
-      filter(stage == "Adult") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_kim)]
-      )
+    filter(stage == "Adult") |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
-  group.by = "sets",
   cutoff = 3,
   sets.x.label = "Number of cells",
   number.angles = 0,
@@ -1051,9 +1049,8 @@ upset(
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
   nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_kim)],
-  empty.intersections = F
+  sets = colnames(data),
+  empty.intersections = NULL
 )
 ```
 
@@ -1087,6 +1084,8 @@ rar2020.srt.pvn$age <-
     from = c("E15", "E17", "P0", "P2", "3P2", "1P10", "P10", "P23"),
     to = c("E15", "E17", "P00", "P02", "P02", "P10", "P10", "P23")
   )
+
+rar2020.srt.pvn <- subset(rar2020.srt.pvn, subset = stage %in% c("Pubertal", "Adult"))
 ```
 :::
 
@@ -1101,48 +1100,36 @@ FeaturePlot_scCustom(
     "Avp", 
     "Sst", 
     "Crh", 
-    "Trh"), 
-  split.by = "stage", 
+    "Trh"),
   na_cutoff = 2, 
+  label = F,
+  num_columns = 5
+  ) * NoLegend()
+```
+
+::: {.cell-output-display}
+![](02-endo-cb_files/figure-html/plot-romanov2020-pvn-feature-np-split-by-stages-1.png){fig-align='center' width=6300}
+:::
+:::
+
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
+FeaturePlot_scCustom(
+  rar2020.srt.pvn, 
+  reduction = "umap", 
+  features = c(
+    metabolic_signaling_genes, 
+    opioid_system_genes,
+    "Slc17a6", "Gad1", "Gad2", "Crh", "Trh", "Oxt", "Sst"
+    ),
   label = F,
   num_columns = 4
   ) * NoLegend()
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-romanov2020-pvn-feature-np-split-by-stages-1.png){fig-align='center' width=5400}
-:::
-:::
-
-::: {.cell layout-align="center"}
-
-```{.r .cell-code}
-FeaturePlot_scCustom(rar2020.srt.pvn, reduction = "umap", features = c(cnbn), split.by = "stage", label = F, num_columns = 4) * NoLegend()
-```
-
-::: {.cell-output-display}
 ![](02-endo-cb_files/figure-html/plot-romanov2020-pvn-feature-cb-split-by-stages-1.png){fig-align='center' width=5400}
-:::
-:::
-
-::: {.cell layout-align="center"}
-
-```{.r .cell-code}
-FeaturePlot(
-  rar2020.srt.pvn,
-  features = c(cnbn),
-  label = F,
-  blend = F,
-  order = TRUE,
-  pt.size = 1.2,
-  raster.dpi = c(1024, 1024),
-  alpha = 0.5,
-  split.by = "age"
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-feature-cb-romanov2020-pvn-1.png){fig-align='center' width=5400}
 :::
 :::
 
@@ -1186,44 +1173,14 @@ content_sbs_mtx_romanov <-
 #### All
 
 
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(content_sbs_mtx_romanov),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_romanov)],
-  empty.intersections = NULL
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-1.png){fig-align='center' width=4200}
-:::
-:::
-
-
-#### Embryonic
-
-
-::: {.cell layout-align="center" fig.asp='1.214'}
+::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
 upset(
   as.data.frame(
     content_sbs_mtx_romanov |>
-      filter(stage == "Embryonic") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_romanov)]
-      )
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1232,49 +1189,14 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_romanov)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-Embryonic-1.png){fig-align='center' width=4200}
-:::
-:::
-
-
-#### Neonatal
-
-
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(
-    content_sbs_mtx_romanov |>
-      filter(stage == "Neonatal") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_romanov)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_romanov)],
-  empty.intersections = NULL
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-Neonatal-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-1.png){fig-align='center' width=10800}
 :::
 :::
 
@@ -1282,16 +1204,15 @@ upset(
 #### Pubertal
 
 
-::: {.cell layout-align="center" fig.asp='1.214'}
+::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
 upset(
   as.data.frame(
     content_sbs_mtx_romanov |>
-      filter(stage == "Pubertal") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_romanov)]
-      )
+    filter(stage == "Pubertal") |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1300,15 +1221,14 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_romanov)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-Pubertal-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-Pubertal-1.png){fig-align='center' width=10800}
 :::
 :::
 
@@ -1316,16 +1236,15 @@ upset(
 #### Adult
 
 
-::: {.cell layout-align="center" fig.asp='1.214'}
+::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
 upset(
   as.data.frame(
     content_sbs_mtx_romanov |>
-      filter(stage == "Adult") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx_romanov)]
-      )
+    filter(stage == "Adult") |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1334,15 +1253,14 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx_romanov)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-Adult-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-romanov2020-pvn-Adult-1.png){fig-align='center' width=7200}
 :::
 :::
 
@@ -1355,7 +1273,7 @@ upset(
 ```{.r .cell-code}
 # Prepare table of intersection sets analysis
 to_select <-
-  c(cnbn, "Oxt", "Crh", "Trh", "Avp", "Sst", "wtree", "age", "stage") %>%
+  c(gene.scale, "wtree", "age", "stage") %>%
   .[. %in% colnames(content_sbs_mtx_kim)] %>%
   .[. %in% colnames(content_sbs_mtx_romanov)]
 
@@ -1371,45 +1289,14 @@ content_sbs_mtx <-
 #### All
 
 
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(content_sbs_mtx),
-  order.by = "freq",
-  group.by = "sets",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-1.png){fig-align='center' width=4200}
-:::
-:::
-
-
-#### Embryonic
-
-
-::: {.cell layout-align="center" fig.asp='1.214'}
+::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Embryonic") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1418,449 +1305,14 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Embryonic-1.png){fig-align='center' width=4200}
-:::
-:::
-
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Embryonic") |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Embryonic-f2-1.png){fig-align='center' width=4200}
-:::
-
-```{.r .cell-code}
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Embryonic") |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
-
-::: {.cell-output-display}
-Table: Data summary
-
-|                         |                   |
-|:------------------------|:------------------|
-|Name                     |as.data.frame(...) |
-|Number of rows           |3771               |
-|Number of columns        |5                  |
-|_______________________  |                   |
-|Column type frequency:   |                   |
-|numeric                  |5                  |
-|________________________ |                   |
-|Group variables          |None               |
-
-
-**Variable type: numeric**
-
-|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
-|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Cnr1          |         0|             1| 0.09| 0.28|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Gpr55         |         0|             1| 0.00| 0.03|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Oxt           |         0|             1| 0.02| 0.15|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Crh           |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Trh           |         0|             1| 0.03| 0.17|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-:::
-:::
-
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Embryonic") |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Embryonic-f3-1.png){fig-align='center' width=4200}
-:::
-
-```{.r .cell-code}
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Embryonic") |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
-
-::: {.cell-output-display}
-Table: Data summary
-
-|                         |                   |
-|:------------------------|:------------------|
-|Name                     |as.data.frame(...) |
-|Number of rows           |3771               |
-|Number of columns        |6                  |
-|_______________________  |                   |
-|Column type frequency:   |                   |
-|numeric                  |6                  |
-|________________________ |                   |
-|Group variables          |None               |
-
-
-**Variable type: numeric**
-
-|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
-|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Dagla         |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Daglb         |         0|             1| 0.02| 0.15|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Mgll          |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Oxt           |         0|             1| 0.02| 0.15|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Crh           |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Trh           |         0|             1| 0.03| 0.17|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-:::
-:::
-
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Embryonic") |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Embryonic-f4-1.png){fig-align='center' width=4200}
-:::
-
-```{.r .cell-code}
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Embryonic") |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
-
-::: {.cell-output-display}
-Table: Data summary
-
-|                         |                   |
-|:------------------------|:------------------|
-|Name                     |as.data.frame(...) |
-|Number of rows           |3771               |
-|Number of columns        |6                  |
-|_______________________  |                   |
-|Column type frequency:   |                   |
-|numeric                  |6                  |
-|________________________ |                   |
-|Group variables          |None               |
-
-
-**Variable type: numeric**
-
-|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
-|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Napepld       |         0|             1| 0.01| 0.08|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Gde1          |         0|             1| 0.11| 0.31|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Faah          |         0|             1| 0.02| 0.12|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Oxt           |         0|             1| 0.02| 0.15|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Crh           |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Trh           |         0|             1| 0.03| 0.17|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-:::
-:::
-
-
-#### Neonatal
-
-
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Neonatal") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Neonatal-1.png){fig-align='center' width=4200}
-:::
-:::
-
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Neonatal") |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Neonatal-f2-1.png){fig-align='center' width=4200}
-:::
-
-```{.r .cell-code}
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Neonatal") |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
-
-::: {.cell-output-display}
-Table: Data summary
-
-|                         |                   |
-|:------------------------|:------------------|
-|Name                     |as.data.frame(...) |
-|Number of rows           |1456               |
-|Number of columns        |5                  |
-|_______________________  |                   |
-|Column type frequency:   |                   |
-|numeric                  |5                  |
-|________________________ |                   |
-|Group variables          |None               |
-
-
-**Variable type: numeric**
-
-|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
-|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Cnr1          |         0|             1| 0.12| 0.33|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Gpr55         |         0|             1| 0.00| 0.03|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
-|Crh           |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Trh           |         0|             1| 0.06| 0.24|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-:::
-:::
-
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Neonatal") |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Neonatal-f3-1.png){fig-align='center' width=4200}
-:::
-
-```{.r .cell-code}
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Neonatal") |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
-
-::: {.cell-output-display}
-Table: Data summary
-
-|                         |                   |
-|:------------------------|:------------------|
-|Name                     |as.data.frame(...) |
-|Number of rows           |1456               |
-|Number of columns        |6                  |
-|_______________________  |                   |
-|Column type frequency:   |                   |
-|numeric                  |6                  |
-|________________________ |                   |
-|Group variables          |None               |
-
-
-**Variable type: numeric**
-
-|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
-|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Dagla         |         0|             1| 0.05| 0.22|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Daglb         |         0|             1| 0.02| 0.15|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Mgll          |         0|             1| 0.03| 0.17|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
-|Crh           |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Trh           |         0|             1| 0.06| 0.24|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-:::
-:::
-
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Neonatal") |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Neonatal-f4-1.png){fig-align='center' width=4200}
-:::
-
-```{.r .cell-code}
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Neonatal") |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
-
-::: {.cell-output-display}
-Table: Data summary
-
-|                         |                   |
-|:------------------------|:------------------|
-|Name                     |as.data.frame(...) |
-|Number of rows           |1456               |
-|Number of columns        |6                  |
-|_______________________  |                   |
-|Column type frequency:   |                   |
-|numeric                  |6                  |
-|________________________ |                   |
-|Group variables          |None               |
-
-
-**Variable type: numeric**
-
-|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
-|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Napepld       |         0|             1| 0.00| 0.07|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Gde1          |         0|             1| 0.12| 0.33|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Faah          |         0|             1| 0.04| 0.19|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
-|Crh           |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Trh           |         0|             1| 0.06| 0.24|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-1.png){fig-align='center' width=10800}
 :::
 :::
 
@@ -1868,16 +1320,15 @@ Table: Data summary
 #### Pubertal
 
 
-::: {.cell layout-align="center" fig.asp='1.214'}
+::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Pubertal") |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1886,54 +1337,21 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Pubertal-1.png){fig-align='center' width=4200}
-:::
-:::
-
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Pubertal-f2-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Pubertal-f2-1.png){fig-align='center' width=10800}
 :::
 
 ```{.r .cell-code}
 skim(as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Pubertal") |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt")))
   ))
 ```
 
@@ -1944,10 +1362,10 @@ Table: Data summary
 |:------------------------|:------------------|
 |Name                     |as.data.frame(...) |
 |Number of rows           |641                |
-|Number of columns        |5                  |
+|Number of columns        |10                 |
 |_______________________  |                   |
 |Column type frequency:   |                   |
-|numeric                  |5                  |
+|numeric                  |10                 |
 |________________________ |                   |
 |Group variables          |None               |
 
@@ -1956,24 +1374,29 @@ Table: Data summary
 
 |skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
 |:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Cnr1          |         0|             1| 0.24| 0.43|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-|Gpr55         |         0|             1| 0.01| 0.12|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Alk           |         0|             1| 0.29| 0.45|  0|   0|   0|   1|    1|▇▁▁▁▃ |
+|Mc3r          |         0|             1| 0.01| 0.11|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Mc4r          |         0|             1| 0.03| 0.17|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Lepr          |         0|             1| 0.02| 0.16|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Lmo4          |         0|             1| 0.27| 0.45|  0|   0|   0|   1|    1|▇▁▁▁▃ |
+|Irs1          |         0|             1| 0.07| 0.26|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Irs4          |         0|             1| 0.25| 0.43|  0|   0|   0|   0|    1|▇▁▁▁▂ |
 |Crh           |         0|             1| 0.05| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Trh           |         0|             1| 0.35| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
 :::
 :::
 
-::: {.cell layout-align="center" fig.asp='1.214'}
+::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Pubertal") |>
+    select(any_of(c(
+      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1982,24 +1405,23 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Pubertal-f3-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Pubertal-f3-1.png){fig-align='center' width=10800}
 :::
 
 ```{.r .cell-code}
 skim(as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Pubertal") |>
+    select(any_of(c(
+      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ))
 ```
 
@@ -2010,10 +1432,10 @@ Table: Data summary
 |:------------------------|:------------------|
 |Name                     |as.data.frame(...) |
 |Number of rows           |641                |
-|Number of columns        |6                  |
+|Number of columns        |12                 |
 |_______________________  |                   |
 |Column type frequency:   |                   |
-|numeric                  |6                  |
+|numeric                  |12                 |
 |________________________ |                   |
 |Group variables          |None               |
 
@@ -2022,25 +1444,32 @@ Table: Data summary
 
 |skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
 |:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Dagla         |         0|             1| 0.13| 0.34|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Daglb         |         0|             1| 0.08| 0.28|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Mgll          |         0|             1| 0.06| 0.23|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Oprd1         |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oprk1         |         0|             1| 0.14| 0.34|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oprl1         |         0|             1| 0.32| 0.47|  0|   0|   0|   1|    1|▇▁▁▁▃ |
+|Oprm1         |         0|             1| 0.16| 0.36|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Pcsk1         |         0|             1| 0.16| 0.37|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Pcsk2         |         0|             1| 0.35| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Pdyn          |         0|             1| 0.19| 0.39|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Penk          |         0|             1| 0.07| 0.26|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Pnoc          |         0|             1| 0.13| 0.34|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Crh           |         0|             1| 0.05| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Trh           |         0|             1| 0.35| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
 :::
 :::
 
-::: {.cell layout-align="center" fig.asp='1.214'}
+::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Pubertal") |>
+    select(any_of(c(
+      metabolic_signaling_genes,
+      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -2049,24 +1478,24 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Pubertal-f4-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Pubertal-f4-1.png){fig-align='center' width=10800}
 :::
 
 ```{.r .cell-code}
 skim(as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Pubertal") |>
+    select(any_of(c(
+      metabolic_signaling_genes,
+      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ))
 ```
 
@@ -2077,10 +1506,10 @@ Table: Data summary
 |:------------------------|:------------------|
 |Name                     |as.data.frame(...) |
 |Number of rows           |641                |
-|Number of columns        |6                  |
+|Number of columns        |19                 |
 |_______________________  |                   |
 |Column type frequency:   |                   |
-|numeric                  |6                  |
+|numeric                  |19                 |
 |________________________ |                   |
 |Group variables          |None               |
 
@@ -2089,12 +1518,25 @@ Table: Data summary
 
 |skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
 |:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Napepld       |         0|             1| 0.04| 0.19|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Gde1          |         0|             1| 0.53| 0.50|  0|   0|   1|   1|    1|▇▁▁▁▇ |
-|Faah          |         0|             1| 0.11| 0.32|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Alk           |         0|             1| 0.29| 0.45|  0|   0|   0|   1|    1|▇▁▁▁▃ |
+|Mc3r          |         0|             1| 0.01| 0.11|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Mc4r          |         0|             1| 0.03| 0.17|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Lepr          |         0|             1| 0.02| 0.16|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Lmo4          |         0|             1| 0.27| 0.45|  0|   0|   0|   1|    1|▇▁▁▁▃ |
+|Irs1          |         0|             1| 0.07| 0.26|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Irs4          |         0|             1| 0.25| 0.43|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Oprd1         |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oprk1         |         0|             1| 0.14| 0.34|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oprl1         |         0|             1| 0.32| 0.47|  0|   0|   0|   1|    1|▇▁▁▁▃ |
+|Oprm1         |         0|             1| 0.16| 0.36|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Pcsk1         |         0|             1| 0.16| 0.37|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Pcsk2         |         0|             1| 0.35| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Pdyn          |         0|             1| 0.19| 0.39|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Penk          |         0|             1| 0.07| 0.26|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Pnoc          |         0|             1| 0.13| 0.34|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Crh           |         0|             1| 0.05| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Trh           |         0|             1| 0.35| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
 :::
 :::
 
@@ -2102,16 +1544,15 @@ Table: Data summary
 #### Adult
 
 
-::: {.cell layout-align="center" fig.asp='1.214'}
+::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(
-        c(cnbn) %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Adult") |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -2120,54 +1561,22 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c(cnbn) %>%
-    .[. %in% colnames(content_sbs_mtx)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-1.png){fig-align='center' width=4200}
-:::
-:::
-
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f2-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f2-1.png){fig-align='center' width=10800}
 :::
 
 ```{.r .cell-code}
 skim(as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Adult") |>
+    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ))
 ```
 
@@ -2178,10 +1587,10 @@ Table: Data summary
 |:------------------------|:------------------|
 |Name                     |as.data.frame(...) |
 |Number of rows           |801                |
-|Number of columns        |5                  |
+|Number of columns        |10                 |
 |_______________________  |                   |
 |Column type frequency:   |                   |
-|numeric                  |5                  |
+|numeric                  |10                 |
 |________________________ |                   |
 |Group variables          |None               |
 
@@ -2190,24 +1599,28 @@ Table: Data summary
 
 |skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
 |:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Cnr1          |         0|             1| 0.11| 0.31|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Gpr55         |         0|             1| 0.00| 0.05|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Oxt           |         0|             1| 0.40| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Alk           |         0|             1| 0.04| 0.20|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Mc3r          |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Mc4r          |         0|             1| 0.01| 0.08|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Lepr          |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Lmo4          |         0|             1| 0.09| 0.28|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Irs1          |         0|             1| 0.01| 0.12|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Irs4          |         0|             1| 0.04| 0.19|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Crh           |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Trh           |         0|             1| 0.10| 0.30|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oxt           |         0|             1| 0.40| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
 :::
 :::
 
-::: {.cell layout-align="center" fig.asp='1.214'}
+::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Adult") |>
+    select(any_of(c(opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -2216,24 +1629,22 @@ upset(
   point.size = 3.5, line.size = 2,
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
-  nintersects = 30,
-  sets = c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
+  nintersects = 70,
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f3-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f3-1.png){fig-align='center' width=10800}
 :::
 
 ```{.r .cell-code}
 skim(as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Adult") |>
+    select(any_of(c(opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ))
 ```
 
@@ -2244,10 +1655,10 @@ Table: Data summary
 |:------------------------|:------------------|
 |Name                     |as.data.frame(...) |
 |Number of rows           |801                |
-|Number of columns        |6                  |
+|Number of columns        |12                 |
 |_______________________  |                   |
 |Column type frequency:   |                   |
-|numeric                  |6                  |
+|numeric                  |12                 |
 |________________________ |                   |
 |Group variables          |None               |
 
@@ -2256,25 +1667,32 @@ Table: Data summary
 
 |skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
 |:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Dagla         |         0|             1| 0.03| 0.16|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Daglb         |         0|             1| 0.06| 0.23|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Mgll          |         0|             1| 0.04| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Oxt           |         0|             1| 0.40| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Oprd1         |         0|             1| 0.00| 0.05|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oprk1         |         0|             1| 0.04| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oprl1         |         0|             1| 0.11| 0.31|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oprm1         |         0|             1| 0.02| 0.14|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Pcsk1         |         0|             1| 0.09| 0.29|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Pcsk2         |         0|             1| 0.29| 0.46|  0|   0|   0|   1|    1|▇▁▁▁▃ |
+|Pdyn          |         0|             1| 0.10| 0.30|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Penk          |         0|             1| 0.04| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Pnoc          |         0|             1| 0.02| 0.14|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Crh           |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Trh           |         0|             1| 0.10| 0.30|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oxt           |         0|             1| 0.40| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
 :::
 :::
 
-::: {.cell layout-align="center" fig.asp='1.214'}
+::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Adult") |>
+    select(any_of(c(
+      metabolic_signaling_genes,
+      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -2284,23 +1702,23 @@ upset(
   text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
   nsets = 30,
   nintersects = 30,
-  sets = c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>%
-    .[. %in% colnames(content_sbs_mtx)],
+  sets = colnames(data),
   empty.intersections = NULL
 )
 ```
 
 ::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f4-1.png){fig-align='center' width=4200}
+![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f4-1.png){fig-align='center' width=10800}
 :::
 
 ```{.r .cell-code}
 skim(as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Oxt", "Crh", "Trh") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
+    filter(stage == "Adult") |>
+    select(any_of(c(
+      metabolic_signaling_genes,
+      opioid_system_genes, "Crh", "Trh", "Oxt"))) |> 
+    select(where(~ is.numeric(.x) && sum(.x) > 0))
   ))
 ```
 
@@ -2311,10 +1729,10 @@ Table: Data summary
 |:------------------------|:------------------|
 |Name                     |as.data.frame(...) |
 |Number of rows           |801                |
-|Number of columns        |6                  |
+|Number of columns        |19                 |
 |_______________________  |                   |
 |Column type frequency:   |                   |
-|numeric                  |6                  |
+|numeric                  |19                 |
 |________________________ |                   |
 |Group variables          |None               |
 
@@ -2323,482 +1741,25 @@ Table: Data summary
 
 |skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
 |:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Napepld       |         0|             1| 0.01| 0.11|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Gde1          |         0|             1| 0.18| 0.39|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-|Faah          |         0|             1| 0.04| 0.20|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Oxt           |         0|             1| 0.40| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Alk           |         0|             1| 0.04| 0.20|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Mc3r          |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Mc4r          |         0|             1| 0.01| 0.08|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Lepr          |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Lmo4          |         0|             1| 0.09| 0.28|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Irs1          |         0|             1| 0.01| 0.12|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Irs4          |         0|             1| 0.04| 0.19|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oprd1         |         0|             1| 0.00| 0.05|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oprk1         |         0|             1| 0.04| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oprl1         |         0|             1| 0.11| 0.31|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oprm1         |         0|             1| 0.02| 0.14|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Pcsk1         |         0|             1| 0.09| 0.29|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Pcsk2         |         0|             1| 0.29| 0.46|  0|   0|   0|   1|    1|▇▁▁▁▃ |
+|Pdyn          |         0|             1| 0.10| 0.30|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Penk          |         0|             1| 0.04| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Pnoc          |         0|             1| 0.02| 0.14|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Crh           |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Trh           |         0|             1| 0.10| 0.30|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-:::
-:::
-
-
-### Contingency tables
-
-
-::: {.cell layout-align="center"}
-
-```{.r .cell-code}
-rar2020.srt.pvn$age %>% forcats::fct_count()
-```
-
-::: {.cell-output-display}
-
-`````{=html}
-<div data-pagedtable="false">
-  <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["f"],"name":[1],"type":["fct"],"align":["left"]},{"label":["n"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"E15","2":"317"},{"1":"E17","2":"593"},{"1":"P00","2":"350"},{"1":"P02","2":"362"},{"1":"P10","2":"425"},{"1":"P23","2":"67"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-`````
-
-:::
-
-```{.r .cell-code}
-rar2020.srt.pvn$stage %>% forcats::fct_count()
-```
-
-::: {.cell-output-display}
-
-`````{=html}
-<div data-pagedtable="false">
-  <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["f"],"name":[1],"type":["fct"],"align":["left"]},{"label":["n"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"Embryonic","2":"910"},{"1":"Neonatal","2":"712"},{"1":"Pubertal","2":"425"},{"1":"Adult","2":"67"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-`````
-
-:::
-
-```{.r .cell-code}
-srt$age %>% forcats::fct_count()
-```
-
-::: {.cell-output-display}
-
-`````{=html}
-<div data-pagedtable="false">
-  <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["f"],"name":[1],"type":["fct"],"align":["left"]},{"label":["n"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"E10","2":"22"},{"1":"E11","2":"168"},{"1":"E12","2":"374"},{"1":"E13","2":"290"},{"1":"E14","2":"540"},{"1":"E15","2":"444"},{"1":"E16","2":"655"},{"1":"E18","2":"368"},{"1":"P14","2":"216"},{"1":"P4","2":"199"},{"1":"P45","2":"734"},{"1":"P8","2":"545"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-`````
-
-:::
-
-```{.r .cell-code}
-srt$stage %>% forcats::fct_count()
-```
-
-::: {.cell-output-display}
-
-`````{=html}
-<div data-pagedtable="false">
-  <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["f"],"name":[1],"type":["fct"],"align":["left"]},{"label":["n"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"Embryonic","2":"2861"},{"1":"Neonatal","2":"744"},{"1":"Pubertal","2":"216"},{"1":"Adult","2":"734"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-`````
-
-:::
-:::
-
-
-## Load selected astrocytes data from Lopez JP et al (2021)
-
-
-::: {.cell layout-align="center"}
-
-```{.r .cell-code}
-anndata <- sc$read(here(
-  "../1_heteroAstrocytes/PRJNA679294/data/",
-  "class_cello/PRJNA679294-whole_dataset-0.001-cello_annotation.h5ad"
-))
-```
-:::
-
-
-### Convert adata object to R AnnDataR6 object.
-
-::: {.cell layout-align="center"}
-
-```{.r .cell-code}
-adata <- py_to_r(anndata)
-class(adata)
-```
-
-::: {.cell-output .cell-output-stdout}
-```
-[1] "AnnDataR6" "R6"       
-```
-:::
-
-```{.r .cell-code}
-class(adata$X)
-```
-
-::: {.cell-output .cell-output-stdout}
-```
-[1] "dgCMatrix"
-attr(,"package")
-[1] "Matrix"
-```
-:::
-
-```{.r .cell-code}
-adata
-```
-
-::: {.cell-output .cell-output-stdout}
-```
-AnnData object with n_obs × n_vars = 9572 × 22835
-    obs: 'nCount_RAW', 'nFeature_RAW', 'nCount_RNA', 'nFeature_RNA', 'orig.ident', 'nFeature_Diff', 'nCount_Diff', 'percent_mito', 'percent_ribo', 'percent_mito_ribo', 'percent_hb', 'log10GenesPerUMI', 'cell_name', 'barcode', 'latent_RT_efficiency', 'latent_cell_probability', 'latent_scale', 'doublet_score', 'predicted_doublets', 'QC', 'var_regex', 'RNA_snn_res.0.5', 'RNA_snn_res.0.741576329532297', 'RNA_snn_res.1.24913691074005', 'RNA_snn_res.3.000001', 'seurat_clusters', 'k_tree', 'comb_clstr1', 'S.Score', 'G2M.Score', 'Phase', 'nCount_SCT', 'nFeature_SCT', 'SCT_snn_res.1', 'SCT_snn_res.1.1014548330962', 'SCT_snn_res.1.22223389211258', 'SCT_snn_res.1.36843938820807', 'SCT_snn_res.1.54904506877152', 'SCT_snn_res.1.7778105049838', 'SCT_snn_res.2.07696233957953', 'SCT_snn_res.2.48489124123347', 'SCT_snn_res.3.07411084005006', 'SCT_snn_res.4.00000100000002', 'bioproject', 'project', 'model', 'tech', 'region', 'sex', 'stage', 'libname', 'expbtch', 'condit', 'ora_celltype'
-    var: 'vst.mean', 'vst.variance', 'vst.variance.expected', 'vst.variance.standardized', 'vst.variable'
-    uns: 'k_tree_colors', 'name', 'ora_celltype_colors'
-    obsm: 'X_pacmap', 'X_pca', 'X_umap', 'ora_estimate', 'ora_pvals'
-```
-:::
-:::
-
-::: {.cell layout-align="center"}
-
-```{.r .cell-code}
-expr_mtx <- t(as.matrix(adata$raw$X))
-colnames(expr_mtx) <- rownames(adata$X)
-rownames(expr_mtx) <- adata$var_names
-srt <- CreateSeuratObject(
-  expr_mtx,
-  assay = "RNA",
-  project = "individual_hypothalamic_nuclei_astrocytes_evaluation_dataset",
-  meta.data = as.data.frame(adata$obs)
-)
-
-Idents(srt) <- "ora_celltype"
-srt <- subset(srt, idents = c("Astrocytes"))
-
-Idents(srt) <- "libname"
-
-print(srt)
-```
-
-::: {.cell-output .cell-output-stdout}
-```
-An object of class Seurat 
-22835 features across 2838 samples within 1 assay 
-Active assay: RNA (22835 features, 0 variable features)
- 1 layer present: counts
-```
-:::
-
-```{.r .cell-code}
-rm(adata, anndata, expr_mtx)
-invisible(gc())
-```
-:::
-
-::: {.cell layout-align="center"}
-
-```{.r .cell-code}
-srt <- NormalizeData(srt)
-srt <- FindVariableFeatures(srt, selection.method = "vst", nfeatures = 5000)
-all.genes <- rownames(srt)
-srt <- ScaleData(srt, features = c(VariableFeatures(srt), cnbn))
-```
-:::
-
-::: {.cell layout-align="center"}
-
-```{.r .cell-code}
-srt <- RunPCA(srt, npcs = 50, verbose = FALSE)
-srt <-
-  srt |>
-  FindNeighbors(
-    dims = 1:40,
-    k.param = 40,
-    annoy.metric = "cosine",
-    n.trees = 100,
-    verbose = FALSE
-  ) |>
-  RunUMAP(
-    dims = 1:50,
-    reduction.name = "umap",
-    reduction.key = "UMAP_",
-    return.model = F,
-    n.epochs = 1000L,
-    n.neighbors = 50,
-    min.dist = 0.5,
-    metric = "cosine",
-    seed.use = reseed,
-    verbose = FALSE
-  )
-```
-:::
-
-::: {.cell layout-align="center"}
-
-```{.r .cell-code}
-DimPlot(srt)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-lopez2021-pvn-condit-astro-1.png){fig-align='center' width=1800}
-:::
-:::
-
-::: {.cell layout-align="center"}
-
-```{.r .cell-code}
-FeaturePlot_scCustom(
-  srt,
-  reduction = "umap",
-  features = c(
-    "Cnr1", "Cnr2", "Gpr55", "Slc1a3",
-    "Dagla", "Daglb", "Mgll", "Gfap",
-    "Napepld", "Gde1", "Faah", "Aldh1l1"
-    ),
-  label = F,
-  num_columns = 4
-) * NoLegend()
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/plot-lopez2021-pvn-feature-cb-1.png){fig-align='center' width=5400}
-:::
-:::
-
-::: {.cell layout-align="center"}
-
-```{.r .cell-code}
-sbs_mtx <-
-  srt@assays$RNA@layers$data %>%
-  as.data.frame() %>%
-  t()
-
-rownames(sbs_mtx) <- colnames(srt)
-colnames(sbs_mtx) <- rownames(srt)
-
-# Filter features
-filt_low_genes <-
-  colSums(sbs_mtx) %>%
-  .[. > quantile(., 0.4)] %>%
-  names()
-sbs_mtx %<>% .[, filt_low_genes]
-
-min_filt_vector2 <-
-  sbs_mtx %>%
-  as_tibble() %>%
-  select(all_of(filt_low_genes)) %>%
-  summarise(across(.fns = ~ quantile(.x, .005))) %>%
-  as.list() %>%
-  map(as.double) %>%
-  simplify() %>%
-  .[filt_low_genes]
-
-# Prepare table of intersection sets analysis
-content_sbs_mtx <-
-  (sbs_mtx > min_filt_vector2) %>%
-  as_tibble() %>%
-  mutate_all(as.numeric) %>%
-  bind_cols(
-    srt@meta.data |> select(condit)
-  )
-```
-:::
-
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(condit == 0) |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Cnr1", "Cnr2", "Gpr55", "Slc1a3", "Gfap", "Aldh1l1") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f2-astro-norm-1.png){fig-align='center' width=4200}
-:::
-
-```{.r .cell-code}
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(condit == 0) |>
-      select(
-        c("Cnr1", "Cnr2", "Gpr55", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
-
-::: {.cell-output-display}
-Table: Data summary
-
-|                         |                   |
-|:------------------------|:------------------|
-|Name                     |as.data.frame(...) |
-|Number of rows           |1392               |
-|Number of columns        |3                  |
-|_______________________  |                   |
-|Column type frequency:   |                   |
-|numeric                  |3                  |
-|________________________ |                   |
-|Group variables          |None               |
-
-
-**Variable type: numeric**
-
-|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
-|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Slc1a3        |         0|             1| 0.98| 0.14|  0|   1|   1|   1|    1|▁▁▁▁▇ |
-|Gfap          |         0|             1| 0.24| 0.43|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-|Aldh1l1       |         0|             1| 0.23| 0.42|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-:::
-:::
-
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(condit == 0) |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Dagla", "Daglb", "Mgll", "Slc1a3", "Gfap", "Aldh1l1") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f3-astro-norm-1.png){fig-align='center' width=4200}
-:::
-
-```{.r .cell-code}
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(condit == 0) |>
-      select(
-        c("Dagla", "Daglb", "Mgll", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
-
-::: {.cell-output-display}
-Table: Data summary
-
-|                         |                   |
-|:------------------------|:------------------|
-|Name                     |as.data.frame(...) |
-|Number of rows           |1392               |
-|Number of columns        |6                  |
-|_______________________  |                   |
-|Column type frequency:   |                   |
-|numeric                  |6                  |
-|________________________ |                   |
-|Group variables          |None               |
-
-
-**Variable type: numeric**
-
-|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
-|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Dagla         |         0|             1| 0.05| 0.22|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Daglb         |         0|             1| 0.09| 0.28|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Mgll          |         0|             1| 0.23| 0.42|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-|Slc1a3        |         0|             1| 0.98| 0.14|  0|   1|   1|   1|    1|▁▁▁▁▇ |
-|Gfap          |         0|             1| 0.24| 0.43|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-|Aldh1l1       |         0|             1| 0.23| 0.42|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-:::
-:::
-
-::: {.cell layout-align="center" fig.asp='1.214'}
-
-```{.r .cell-code}
-upset(
-  as.data.frame(
-    content_sbs_mtx |>
-      filter(condit == 0) |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ),
-  order.by = "freq",
-  cutoff = 3,
-  sets.x.label = "Number of cells",
-  number.angles = 0,
-  point.size = 3.5, line.size = 2,
-  text.scale = c(2, 1.6, 2, 1.3, 2, 1.1),
-  nsets = 30,
-  nintersects = 30,
-  sets = c("Napepld", "Gde1", "Faah", "Slc1a3", "Gfap", "Aldh1l1") %>%
-    .[. %in% colnames(content_sbs_mtx)],
-  empty.intersections = NULL
-)
-```
-
-::: {.cell-output-display}
-![](02-endo-cb_files/figure-html/upset-group-e-cb-pvn-Adult-f4-astro-norm-1.png){fig-align='center' width=4200}
-:::
-
-```{.r .cell-code}
-skim(as.data.frame(
-    content_sbs_mtx |>
-      filter(condit == 0) |>
-      select(
-        c("Napepld", "Gde1", "Faah", "Slc1a3", "Gfap", "Aldh1l1") %>% .[. %in% colnames(content_sbs_mtx)]
-      )
-  ))
-```
-
-::: {.cell-output-display}
-Table: Data summary
-
-|                         |                   |
-|:------------------------|:------------------|
-|Name                     |as.data.frame(...) |
-|Number of rows           |1392               |
-|Number of columns        |5                  |
-|_______________________  |                   |
-|Column type frequency:   |                   |
-|numeric                  |5                  |
-|________________________ |                   |
-|Group variables          |None               |
-
-
-**Variable type: numeric**
-
-|skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
-|:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Napepld       |         0|             1| 0.02| 0.14|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Gde1          |         0|             1| 0.19| 0.39|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-|Slc1a3        |         0|             1| 0.98| 0.14|  0|   1|   1|   1|    1|▁▁▁▁▇ |
-|Gfap          |         0|             1| 0.24| 0.43|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-|Aldh1l1       |         0|             1| 0.23| 0.42|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Oxt           |         0|             1| 0.40| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
 :::
 :::
 
@@ -2820,7 +1781,7 @@ sessioninfo::session_info()
  collate  en_US.UTF-8
  ctype    en_US.UTF-8
  tz       Etc/UTC
- date     2024-11-26
+ date     2024-11-27
  pandoc   3.2 @ /opt/python/3.8.8/bin/ (via rmarkdown)
 
 ─ Packages ───────────────────────────────────────────────────────────────────
