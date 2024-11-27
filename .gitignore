@@ -7,6 +7,9 @@
 .snakemake
 .cache
 .nv
+.bash_history
+.local
+.ipython
 analysis/figure
 analysis/*png
 analysis/*html

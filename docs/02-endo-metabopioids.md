@@ -31,7 +31,7 @@ authors:
     corresponding: true
     orcid: 0000-0002-6637-5900
     email: tibor.harkany@meduniwien.ac.at
-date: "2024-11-27"
+date: "2024-11-29"
 format:
   html: 
     default: true
@@ -223,8 +223,8 @@ opioid_system_genes <- c(
 metabolic_signaling_genes <- c(
   # Receptor tyrosine kinases and ligands
   "Alk", # Anaplastic lymphoma kinase - neural development, metabolism
-  "Fam150a", # ALK ligand 1/Augmentor-α - ALK receptor activator
-  "Fam150b", # ALK ligand 2/Augmentor-β - ALK receptor activator
+  "Fam150a", # ALK ligand 1/Augmentor-β - ALK receptor activator
+  "Fam150b", # ALK ligand 2/Augmentor-α - ALK receptor activator
 
   # Melanocortin system
   "Mc3r", # Melanocortin 3 receptor - energy homeostasis, inflammation
@@ -860,6 +860,31 @@ FeaturePlot_scCustom(
 
 ```{.r .cell-code}
 FeaturePlot_scCustom(
+  srt,
+  reduction = "ref.umap",
+  features = c(
+    "Fam150a",
+    "Fam150b",
+    "Alk",
+    "Scgn",
+    "Crh"
+  ),
+  split.by = "stage",
+  max.cutoff = "q95",
+  label = F,
+  num_columns = 4
+) * NoLegend()
+```
+
+::: {.cell-output-display}
+![](02-endo-metabopioids_files/figure-html/ref-embedding-split-stage-kim2020-crh-alk-1.png){fig-align='center' width=5400}
+:::
+:::
+
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
+FeaturePlot_scCustom(
   rar2020.srt.pub,
   reduction = "umap",
   features = c(
@@ -885,6 +910,31 @@ FeaturePlot_scCustom(
 ::: {.cell layout-align="center"}
 
 ```{.r .cell-code}
+FeaturePlot_scCustom(
+  rar2020.srt.pub,
+  reduction = "umap",
+  features = c(
+    "Fam150a",
+    "Fam150b",
+    "Alk",
+    "Scgn",
+    "Crh"
+  ),
+  split.by = "stage",
+  max.cutoff = "q97.5",
+  label = F,
+  num_columns = 4
+) * NoLegend()
+```
+
+::: {.cell-output-display}
+![](02-endo-metabopioids_files/figure-html/ref-embedding-split-stage-romanov2020-crh-alk-1.png){fig-align='center' width=5400}
+:::
+:::
+
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
 if (!file.exists(here(data_dir, "kim2020_pvn_neurons.txt"))) {
   plot <- DimPlot(object = srt, reduction = "ref.umap")
   srt <- CellSelector(plot = plot, object = srt, ident = "SelectedCells")
@@ -893,8 +943,10 @@ if (!file.exists(here(data_dir, "kim2020_pvn_neurons.txt"))) {
   write_lines(selected_cells, file = here(data_dir, "kim2020_pvn_neurons.txt"))
 }
 selected_cells <- read_lines(here(data_dir, "kim2020_pvn_neurons.txt"))
-srt <- subset(srt, cells = selected_cells)
-srt <- subset(srt, subset = refUMAP_1 > 4 & refUMAP_2 > -1)
+srt <- subset(srt, cells = c(selected_cells, WhichCells(srt, expression = (
+    Crh > 0 & (Scgn > 0 | Alk > 0 | Fam150b > 0 | Fam150a > 0)
+))))
+# srt <- subset(srt, subset = refUMAP_1 > 4 & refUMAP_2 > -1)
 
 srt@meta.data <- srt@meta.data |> rename(wtree = predicted.id, age = Age)
 
@@ -906,7 +958,7 @@ srt
 ::: {.cell-output .cell-output-stdout}
 ```
 An object of class Seurat 
-27998 features across 950 samples within 1 assay 
+27998 features across 954 samples within 1 assay 
 Active assay: RNA (27998 features, 3000 variable features)
  3 layers present: counts, data, scale.data
  3 dimensional reductions calculated: umap, ref.pca, ref.umap
@@ -1109,24 +1161,45 @@ upset(
 
 ```{.r .cell-code}
 rar2020.srt.pvn <-
-  subset(
-    x = rar2020.srt.pub,
-    idents = c(
-      "mneOXY", "mneVAS",
-      "pneSS", "pneCRH", "pneTRH"
-    ),
-    invert = FALSE
-  )
+    subset(
+        x = rar2020.srt.pub,
+        cells = unique(c(
+            WhichCells(rar2020.srt.pub,
+                       idents = c(
+                           "mneOXY", "mneVAS",
+                           "pneSS", "pneCRH", "pneTRH"
+                       )), 
+            WhichCells(
+                rar2020.srt.pub,
+                expression = (Crh > 0 & (Scgn > 0 | Alk > 0 | Fam150b > 0 | Fam150a > 0)))
+        )),
+        invert = FALSE
+    )
 
-rar2020.srt.pvn <- subset(rar2020.srt.pvn, subset = umap_1 > 4 & umap_2 > -1)
+table(rar2020.srt.pvn$age)
+```
 
-rar2020.srt.pvn$age <-
-  plyr::mapvalues(
-    x = rar2020.srt.pvn$age,
-    from = c("E15", "E17", "P0", "P2", "3P2", "1P10", "P10", "P23"),
-    to = c("E15", "E17", "P00", "P02", "P02", "P10", "P10", "P23")
-  )
+::: {.cell-output .cell-output-stdout}
+```
 
+E15 E17 P00 P02 P10 P23 
+332 615 374 389 537  67 
+```
+:::
+
+```{.r .cell-code}
+table(rar2020.srt.pvn$stage)
+```
+
+::: {.cell-output .cell-output-stdout}
+```
+
+Embryonic  Neonatal  Pubertal     Adult 
+      947       763       537        67 
+```
+:::
+
+```{.r .cell-code}
 rar2020.srt.pvn <- subset(rar2020.srt.pvn, subset = stage %in% c("Pubertal", "Adult"))
 ```
 :::
@@ -1135,6 +1208,33 @@ rar2020.srt.pvn <- subset(rar2020.srt.pvn, subset = stage %in% c("Pubertal", "Ad
 We subset Romanov et al., 2020 dataset to only Pubertal and Adult
 stages.
 
+
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
+table(rar2020.srt.pvn$age)
+```
+
+::: {.cell-output .cell-output-stdout}
+```
+
+P10 P23 
+537  67 
+```
+:::
+
+```{.r .cell-code}
+table(rar2020.srt.pvn$stage)
+```
+
+::: {.cell-output .cell-output-stdout}
+```
+
+Embryonic  Neonatal  Pubertal     Adult 
+        0         0       537        67 
+```
+:::
+:::
 
 ::: {.cell layout-align="center"}
 
@@ -1156,7 +1256,31 @@ FeaturePlot_scCustom(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-metabopioids_files/figure-html/plot-romanov2020-pvn-feature-np-split-by-stages-1.png){fig-align='center' width=6300}
+![](02-endo-metabopioids_files/figure-html/plot-romanov2020-pvn-feature-np-1.png){fig-align='center' width=6300}
+:::
+:::
+
+::: {.cell layout-align="center"}
+
+```{.r .cell-code}
+FeaturePlot_scCustom(
+  rar2020.srt.pvn,
+  reduction = "umap",
+  features = c(
+    "Fam150a",
+    "Fam150b",
+    "Alk",
+    "Scgn",
+    "Crh"
+  ),
+  max.cutoff = "q97.5",
+  label = F,
+  num_columns = 5
+) * NoLegend()
+```
+
+::: {.cell-output-display}
+![](02-endo-metabopioids_files/figure-html/plot-romanov2020-pvn-feature-crh-alk-1.png){fig-align='center' width=6300}
 :::
 :::
 
@@ -1177,7 +1301,7 @@ FeaturePlot_scCustom(
 ```
 
 ::: {.cell-output-display}
-![](02-endo-metabopioids_files/figure-html/plot-romanov2020-pvn-feature-metabopioid-split-by-stages-1.png){fig-align='center' width=5400}
+![](02-endo-metabopioids_files/figure-html/plot-romanov2020-pvn-feature-metabopioid-1.png){fig-align='center' width=5400}
 :::
 :::
 
@@ -1409,7 +1533,7 @@ Table: Data summary
 |                         |                   |
 |:------------------------|:------------------|
 |Name                     |as.data.frame(...) |
-|Number of rows           |641                |
+|Number of rows           |753                |
 |Number of columns        |10                 |
 |_______________________  |                   |
 |Column type frequency:   |                   |
@@ -1422,15 +1546,15 @@ Table: Data summary
 
 |skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
 |:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Alk           |         0|             1| 0.29| 0.45|  0|   0|   0|   1|    1|▇▁▁▁▃ |
-|Mc3r          |         0|             1| 0.01| 0.11|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Mc4r          |         0|             1| 0.03| 0.17|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Lepr          |         0|             1| 0.02| 0.16|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Lmo4          |         0|             1| 0.27| 0.45|  0|   0|   0|   1|    1|▇▁▁▁▃ |
-|Irs1          |         0|             1| 0.07| 0.26|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Irs4          |         0|             1| 0.25| 0.43|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-|Crh           |         0|             1| 0.05| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Trh           |         0|             1| 0.35| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Alk           |         0|             1| 0.37| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Mc3r          |         0|             1| 0.01| 0.12|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Mc4r          |         0|             1| 0.03| 0.18|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Lepr          |         0|             1| 0.03| 0.16|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Lmo4          |         0|             1| 0.28| 0.45|  0|   0|   0|   1|    1|▇▁▁▁▃ |
+|Irs1          |         0|             1| 0.09| 0.29|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Irs4          |         0|             1| 0.28| 0.45|  0|   0|   0|   1|    1|▇▁▁▁▃ |
+|Crh           |         0|             1| 0.16| 0.37|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Trh           |         0|             1| 0.33| 0.47|  0|   0|   0|   1|    1|▇▁▁▁▃ |
 |Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
 :::
 :::
@@ -1481,7 +1605,7 @@ Table: Data summary
 |                         |                   |
 |:------------------------|:------------------|
 |Name                     |as.data.frame(...) |
-|Number of rows           |641                |
+|Number of rows           |753                |
 |Number of columns        |12                 |
 |_______________________  |                   |
 |Column type frequency:   |                   |
@@ -1494,17 +1618,17 @@ Table: Data summary
 
 |skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
 |:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Oprd1         |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Oprk1         |         0|             1| 0.14| 0.34|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Oprl1         |         0|             1| 0.32| 0.47|  0|   0|   0|   1|    1|▇▁▁▁▃ |
-|Oprm1         |         0|             1| 0.16| 0.36|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-|Pcsk1         |         0|             1| 0.16| 0.37|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-|Pcsk2         |         0|             1| 0.35| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Oprd1         |         0|             1| 0.02| 0.13|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oprk1         |         0|             1| 0.15| 0.35|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Oprl1         |         0|             1| 0.35| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Oprm1         |         0|             1| 0.19| 0.40|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Pcsk1         |         0|             1| 0.17| 0.38|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Pcsk2         |         0|             1| 0.34| 0.47|  0|   0|   0|   1|    1|▇▁▁▁▅ |
 |Pdyn          |         0|             1| 0.19| 0.39|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-|Penk          |         0|             1| 0.07| 0.26|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Pnoc          |         0|             1| 0.13| 0.34|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Crh           |         0|             1| 0.05| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Trh           |         0|             1| 0.35| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Penk          |         0|             1| 0.10| 0.30|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Pnoc          |         0|             1| 0.16| 0.37|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Crh           |         0|             1| 0.16| 0.37|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Trh           |         0|             1| 0.33| 0.47|  0|   0|   0|   1|    1|▇▁▁▁▃ |
 |Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
 :::
 :::
@@ -1557,7 +1681,7 @@ Table: Data summary
 |                         |                   |
 |:------------------------|:------------------|
 |Name                     |as.data.frame(...) |
-|Number of rows           |641                |
+|Number of rows           |753                |
 |Number of columns        |19                 |
 |_______________________  |                   |
 |Column type frequency:   |                   |
@@ -1570,24 +1694,24 @@ Table: Data summary
 
 |skim_variable | n_missing| complete_rate| mean|   sd| p0| p25| p50| p75| p100|hist  |
 |:-------------|---------:|-------------:|----:|----:|--:|---:|---:|---:|----:|:-----|
-|Alk           |         0|             1| 0.29| 0.45|  0|   0|   0|   1|    1|▇▁▁▁▃ |
-|Mc3r          |         0|             1| 0.01| 0.11|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Mc4r          |         0|             1| 0.03| 0.17|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Lepr          |         0|             1| 0.02| 0.16|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Lmo4          |         0|             1| 0.27| 0.45|  0|   0|   0|   1|    1|▇▁▁▁▃ |
-|Irs1          |         0|             1| 0.07| 0.26|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Irs4          |         0|             1| 0.25| 0.43|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-|Oprd1         |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Oprk1         |         0|             1| 0.14| 0.34|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Oprl1         |         0|             1| 0.32| 0.47|  0|   0|   0|   1|    1|▇▁▁▁▃ |
-|Oprm1         |         0|             1| 0.16| 0.36|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-|Pcsk1         |         0|             1| 0.16| 0.37|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-|Pcsk2         |         0|             1| 0.35| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Alk           |         0|             1| 0.37| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Mc3r          |         0|             1| 0.01| 0.12|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Mc4r          |         0|             1| 0.03| 0.18|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Lepr          |         0|             1| 0.03| 0.16|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Lmo4          |         0|             1| 0.28| 0.45|  0|   0|   0|   1|    1|▇▁▁▁▃ |
+|Irs1          |         0|             1| 0.09| 0.29|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Irs4          |         0|             1| 0.28| 0.45|  0|   0|   0|   1|    1|▇▁▁▁▃ |
+|Oprd1         |         0|             1| 0.02| 0.13|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Oprk1         |         0|             1| 0.15| 0.35|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Oprl1         |         0|             1| 0.35| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Oprm1         |         0|             1| 0.19| 0.40|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Pcsk1         |         0|             1| 0.17| 0.38|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Pcsk2         |         0|             1| 0.34| 0.47|  0|   0|   0|   1|    1|▇▁▁▁▅ |
 |Pdyn          |         0|             1| 0.19| 0.39|  0|   0|   0|   0|    1|▇▁▁▁▂ |
-|Penk          |         0|             1| 0.07| 0.26|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Pnoc          |         0|             1| 0.13| 0.34|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Crh           |         0|             1| 0.05| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Trh           |         0|             1| 0.35| 0.48|  0|   0|   0|   1|    1|▇▁▁▁▅ |
+|Penk          |         0|             1| 0.10| 0.30|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Pnoc          |         0|             1| 0.16| 0.37|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Crh           |         0|             1| 0.16| 0.37|  0|   0|   0|   0|    1|▇▁▁▁▂ |
+|Trh           |         0|             1| 0.33| 0.47|  0|   0|   0|   1|    1|▇▁▁▁▃ |
 |Oxt           |         0|             1| 0.39| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
 :::
 :::
@@ -1638,7 +1762,7 @@ Table: Data summary
 |                         |                   |
 |:------------------------|:------------------|
 |Name                     |as.data.frame(...) |
-|Number of rows           |801                |
+|Number of rows           |805                |
 |Number of columns        |10                 |
 |_______________________  |                   |
 |Column type frequency:   |                   |
@@ -1654,11 +1778,11 @@ Table: Data summary
 |Alk           |         0|             1| 0.04| 0.20|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Mc3r          |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Mc4r          |         0|             1| 0.01| 0.08|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Lepr          |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Lepr          |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Lmo4          |         0|             1| 0.09| 0.28|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Irs1          |         0|             1| 0.01| 0.12|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Irs4          |         0|             1| 0.04| 0.19|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Crh           |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Crh           |         0|             1| 0.01| 0.11|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Trh           |         0|             1| 0.10| 0.30|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Oxt           |         0|             1| 0.40| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
 :::
@@ -1706,7 +1830,7 @@ Table: Data summary
 |                         |                   |
 |:------------------------|:------------------|
 |Name                     |as.data.frame(...) |
-|Number of rows           |801                |
+|Number of rows           |805                |
 |Number of columns        |12                 |
 |_______________________  |                   |
 |Column type frequency:   |                   |
@@ -1728,7 +1852,7 @@ Table: Data summary
 |Pdyn          |         0|             1| 0.10| 0.30|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Penk          |         0|             1| 0.04| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Pnoc          |         0|             1| 0.02| 0.14|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Crh           |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Crh           |         0|             1| 0.01| 0.11|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Trh           |         0|             1| 0.10| 0.30|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Oxt           |         0|             1| 0.40| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
 :::
@@ -1782,7 +1906,7 @@ Table: Data summary
 |                         |                   |
 |:------------------------|:------------------|
 |Name                     |as.data.frame(...) |
-|Number of rows           |801                |
+|Number of rows           |805                |
 |Number of columns        |19                 |
 |_______________________  |                   |
 |Column type frequency:   |                   |
@@ -1798,7 +1922,7 @@ Table: Data summary
 |Alk           |         0|             1| 0.04| 0.20|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Mc3r          |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Mc4r          |         0|             1| 0.01| 0.08|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Lepr          |         0|             1| 0.01| 0.09|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Lepr          |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Lmo4          |         0|             1| 0.09| 0.28|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Irs1          |         0|             1| 0.01| 0.12|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Irs4          |         0|             1| 0.04| 0.19|  0|   0|   0|   0|    1|▇▁▁▁▁ |
@@ -1811,7 +1935,7 @@ Table: Data summary
 |Pdyn          |         0|             1| 0.10| 0.30|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Penk          |         0|             1| 0.04| 0.21|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Pnoc          |         0|             1| 0.02| 0.14|  0|   0|   0|   0|    1|▇▁▁▁▁ |
-|Crh           |         0|             1| 0.01| 0.10|  0|   0|   0|   0|    1|▇▁▁▁▁ |
+|Crh           |         0|             1| 0.01| 0.11|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Trh           |         0|             1| 0.10| 0.30|  0|   0|   0|   0|    1|▇▁▁▁▁ |
 |Oxt           |         0|             1| 0.40| 0.49|  0|   0|   0|   1|    1|▇▁▁▁▅ |
 :::
@@ -1835,8 +1959,8 @@ sessioninfo::session_info()
  collate  en_US.UTF-8
  ctype    en_US.UTF-8
  tz       Etc/UTC
- date     2024-11-27
- pandoc   3.2 @ /opt/python/3.8.8/bin/ (via rmarkdown)
+ date     2024-11-29
+ pandoc   3.1.11.1 @ /home/etretiakov/micromamba/bin/ (via rmarkdown)
 
 ─ Packages ───────────────────────────────────────────────────────────────────
  package          * version     date (UTC) lib source
