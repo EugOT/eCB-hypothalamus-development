@@ -293,8 +293,6 @@ dopam <- c("Th", "Slc6a3", "Slc18a2", "Ddc", "Slc18a3", "Drd1", "Drd2", "Drd3", 
 sert <- c("Htr1a", "Htr1b", "Htr1d", "Htr1f", "Htr2a", "Htr2b", "Htr2c", "Htr3a", "Htr3b", "Htr4", "Htr5a", "Htr5b", "Htr6", "Htr7", "Gnai1", "Gnai3", "Gnao1", "Gnaz")
 ach <- c("Chat", "Slc18a3", "Ache", "Slc5a7")
 mcr_genes <- c("Mc1r", "Mc2r", "Mc3r", "Mc4r")
-pvn_genes <- c("Trh", "Crh", "Mbnl3", "Pgf", "Irs4", "Gpr101", "Nr3c2", "Agtr1")
-dmh_trh_g <- c("Onecut3", "Cartpt")
 
 mitochondrial <- c(
     "Mfn1", # Mitofusin 1: A GTPase located on the outer mitochondrial membrane that plays a crucial role in mitochondrial fusion. Mfn1 mediates tethering and fusion of the outer mitochondrial membranes, helping to maintain the integrity and function of the mitochondrial network.
@@ -543,74 +541,27 @@ cnbn <- c(
     "Pparg"
 )
 
-genes.nature <- c(
-    "Ndrg2", "Aqp4", "Gja1",
-    "Slc17a9", "Slc17a7", "Slc17a6",
-    "Slc16a1", "Slc16a7", "Slc16a3",
-    "Panx1", "P2rx7", "Srr",
-    "Dao", "Vamp2", "Gab1",
-    "Slc18a1", "Slc18a2", "Slc18a3",
-    "Slc17a5", "Osmr", "S100a6",
-    "Ogn", "Itih5", "Rdh10",
-    "Fst", "1500015O10Rik", "Rnf13",
-    "A2m", "Rsph9", "Galnt16",
-    "Rad23b", "Tgfbr2", "Ppp1r15a",
-    "Mlc1", "Slc6a11", "Slc1a3", "S100b",
-    "S100b", "Fabp7", "Gab1", "Igfbp5",
-    "Hopx", "Igsf1", "Tgfb2", "2810459M11Rik",
-    "Rnf13", "Itih5", "Slc1a2", "Cd59a",
-    "Vim", "Slc7a10", "Fos"
-)
-
-genes.jj <- c(
-    "Acsbg1", "Acsl3", "Actb", "Agt", "Aldh1l1", "Aldoc", "Apoe",
-    "Aqp4", "Atp1a2", "Bmpr1b", "Cbs", "Ckb", "Clu", "Cnx43",
-    "Cpe", "Cst3", "Cth", "Cyp4f14", "Dbi", "Dbx2", "Dctd",
-    "Dio2", "Ednrb", "Fgfr3", "Gabbr1", "Gabbr2", "Gjb6", "Gli3",
-    "Gm266", "Gpr37l1", "Grhl1", "Grm3", "Gs", "Gucy2c", "Hapln1",
-    "Hes5", "Heyl", "Hgf", "Id2", "Itih3", "Lars2", "Lcat",
-    "Ldhb", "Malat1", "Mc3r", "Mfge8", "Mlc1", "Mmd2", "Mt1",
-    "Mt2", "Ndrg2", "Nfia", "Npas3", "Nrxn1", "Ntrk2", "Ntsr2",
-    "Olx1", "Otx2", "Pax6", "Pbxip1", "Phkg1", "Pla2g3", "Pla2g7",
-    "Plcd4", "Plce1", "Plp1", "Ppap2b", "Ppia", "Prodh", "Ptprz1",
-    "Rfx4", "Rpl41", "S1pr1", "Scd2", "Serpinb1c", "Slc19a3", "Slc1a2",
-    "Slc1a3", "Slc39a12", "Slc4a4", "Slc6a11", "Son", "Sox2", "Sox9",
-    "Sparc", "Sparcl1", "Tlr3"
-)
-
-genes.anatomy.jj <- c(
-    "Gfap", "Meg3", "Snhg11", "Ttc3", "Cst3", "Sparcl1",
-    "Ndrg2", "Cnx43", "Agt", "S100b", "Aldh1l1", "Lxn",
-    "Aqp4", "Slc1a2", "Fabp7", "Glul", "Olig2"
-)
-
 # public resources:
 housekeeping_mouse <-
     read_lines(file = here(data_dir, "housekeeping_mouse.tsv"))
 transcription_factors <-
     read_lines(file = here(data_dir, "mm_tfs.csv"))
-astroenriched_mouse <-
-    read_lines(file = here(data_dir, "astrocyte_enriched_genes_shared_by_mice.tsv"))
 
-astroprogenitor_humans <-
-    read_lines(file = here(data_dir, "top_astrocytes_progenitor_cells_genes_by_humans.tsv")) |>
-    str_to_sentence()
-astromature_humans <-
-    read_lines(file = here(data_dir, "top_mature_astrocyte_genes_by_humans.tsv")) |>
-    str_to_sentence()
-
-# aggregate:
-genes.manual <- unique(c(
-    genes.embed, genes.nature,
-    genes.jj, genes.anatomy.jj,
-    astroenriched_mouse,
-    astromature_humans,
-    astroprogenitor_humans
-))
-
+sex_genes <-
+    str_to_title(c(
+        "EHD2", "ESPL1", "JARID1D", "PNPLA4",
+        "RPS4Y1", "XIST", "tsix", "Eif2s3y",
+        "Ddx3y", "Uty", "Kdm5d"
+    ))
+stress_genes <-
+    str_to_title(c(
+        "Rpl26", "Gstp1", "Rpl35a", "Erh",
+        "Slc25a5", "Pgk1", "Eno1",
+        "Tubb2a", "Emc4", "Scg5"
+    ))
 
 gene_int <-
     c(
         npr, np, irs_genes, neurotrans, mcr_genes,
-        genes.manual, pvn_genes, dmh_trh_g
+        genes.embed
     ) %>% unique()

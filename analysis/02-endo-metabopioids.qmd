@@ -93,13 +93,11 @@ knitr::knit_hooks$set(debug = function(before, options, envir) {
 })
 
 knitr::opts_chunk$set(
+  warning        = FALSE,
   cache          = FALSE,
   dev            = c("png", "pdf"),
   timeit         = TRUE
 )
-
-Sys.setenv(RETICULATE_PYTHON = "/opt/python/3.8.8/bin/python")
-reticulate::use_condaenv("/opt/python/3.8.8/bin/python")
 ```
 
 ## Setup parameters
@@ -127,15 +125,10 @@ suppressPackageStartupMessages({
   library(cowplot)
   library(patchwork)
   library(ggstatsplot)
-  library(anndata)
-  library(sceasy)
   library(Seurat)
-  library(SeuratDisk)
   library(SeuratWrappers)
   library(scCustomize)
 })
-
-sc <- import("scanpy", convert = FALSE)
 ```
 
 ### Set paths
@@ -168,7 +161,7 @@ reseed <- 42
 set.seed(seed = reseed)
 
 # Parameters for parallel execution
-n_cores <- 8
+n_cores <- parallelly::availableCores()/2 - 1
 plan("multisession", workers = n_cores)
 options(
   future.globals.maxSize = 100000 * 1024^2,
@@ -237,131 +230,1007 @@ metabolic_signaling_genes <- c(
   "Mc4r", # Melanocortin 4 receptor - appetite control, energy balance
 
   # Metabolic hormone receptors
-  "Lepr", # Leptin receptor - energy balance, satiety
-  "Insr", # Insulin receptor - glucose homeostasis
+  # "Lepr", # Leptin receptor - energy balance, satiety
+  # "Insr", # Insulin receptor - glucose homeostasis
   # "Igf1r",    # Insulin-like growth factor 1 receptor - growth, development
 
   # Signaling adaptors/regulators
-  "Lmo4", # LIM domain only 4 - transcriptional regulation, metabolism
-  "Irs1", # Insulin receptor substrate 1 - insulin signaling
-  "Irs4" # Insulin receptor substrate 4 - insulin/leptin signaling
+  "Lmo4" # LIM domain only 4 - transcriptional regulation, metabolism
+  # "Irs1", # Insulin receptor substrate 1 - insulin signaling
+  # "Irs4" # Insulin receptor substrate 4 - insulin/leptin signaling
 )
 ```
+
+## Load data from Xu et al (2020)
+
+```{r}
+#| label: convert-xu2020-PVN-to-sce
+expr_counts <- read_csv(here(data_dir, "GSE148568_compiled_data.csv"))
+ercc_counts <- read_csv(here(data_dir, "GSE148568_compiled_data_erccs.csv"))
+meta_data <- read_csv(here(data_dir, "GSE148568_cell_metadata_after_qc.csv")) |> dplyr::select(-1)
+
+rownames(meta_data) <- meta_data$sample_id
+
+gene.names <- expr_counts |> pull(1)
+expr_counts <- expr_counts |> dplyr::select(-1) |> as.matrix()
+rownames(expr_counts) <- gene.names
+# expr_counts <- expr_counts[ , meta_data$sample_id]
+
+ercc.names <- ercc_counts |> pull(1)
+ercc_counts <- ercc_counts |> dplyr::select(-1) |> as.matrix()
+rownames(ercc_counts) <- ercc.names
+# ercc_counts <- ercc_counts[ , meta_data$sample_id]
+
+library(SingleCellExperiment)
+sce.xu <- SingleCellExperiment(
+  assays = list(counts = expr_counts),
+  altExps = list(ERCC = SummarizedExperiment(assays = list(counts = ercc_counts))))#,
+  # colData = metadata)
+# altExp(sce.xu, "ERCC") <- SummarizedExperiment(ercc_counts)
+
+# rm(expr_counts, ercc_counts, gene.names, ercc.names)
+```
+
+```{r}
+#| label: process-xu2020-PVN
+library(scater)
+library(AnnotationDbi)
+library(org.Mm.eg.db)
+library(EnsDb.Mmusculus.v79)
+ensdb_genes <- genes(EnsDb.Mmusculus.v79)
+MT_names <- ensdb_genes[seqnames(ensdb_genes) == "MT"]$symbol
+is_mito <- rownames(sce.xu) %in% MT_names
+table(is_mito)
+
+
+sce.xu_cell <- perCellQCMetrics(sce.xu, subsets=list(Mito=is_mito), use.altexps = "ERCC")
+sce.xu_feature <- perFeatureQCMetrics(sce.xu)
+sce.xu <- addPerCellQC(sce.xu, subsets=list(Mito=is_mito), use.altexps = TRUE)
+sce.xu <- addPerFeatureQC(sce.xu)
+
+glimpse(sce.xu_cell)
+
+glimpse(sce.xu_feature)
+```
+
+```{r}
+#| label: process-xu2020-PVN-qc-lib
+qc.lib2 <- isOutlier(sce.xu_cell$sum, log=TRUE, type="lower")
+attr(qc.lib2, "thresholds")
+```
+
+```{r}
+#| label: process-xu2020-PVN-qc-nexprs
+qc.nexprs2 <- isOutlier(sce.xu_cell$detected, log=TRUE, type="lower")
+attr(qc.nexprs2, "thresholds")
+```
+
+```{r}
+#| label: process-xu2020-PVN-qc-spike
+qc.spike2 <- isOutlier(sce.xu_cell$altexps_ERCC_percent, type="higher")
+attr(qc.spike2, "thresholds")
+```
+
+```{r}
+#| label: process-xu2020-PVN-qc-mito
+qc.mito2 <- isOutlier(sce.xu_cell$subsets_Mito_percent, type="higher")
+attr(qc.mito2, "thresholds")
+```
+
+```{r}
+#| label: process-xu2020-PVN-qc-discard2
+discard2 <- qc.lib2 | qc.nexprs2 | qc.spike2 | qc.mito2
+DataFrame(LibSize=sum(qc.lib2), NExprs=sum(qc.nexprs2), SpikeProp=sum(qc.spike2, na.rm = T), MitoProp=sum(qc.mito2, na.rm = T), Total=sum(discard2))
+```
+
+```{r}
+#| label: process-xu2020-PVN-qc-discard
+reasons <- quickPerCellQC(sce.xu_cell, sub.fields=c("subsets_Mito_percent", "altexps_ERCC_percent"))
+colSums(as.matrix(reasons))
+sce.xu$discard <- reasons$discard
+```
+
+```{r}
+#| label: fig-xu2020-PVN-qc-discard-mito
+plotColData(sce.xu, x="sum", y="subsets_Mito_percent", colour_by="discard")
+```
+
+```{r}
+#| label: fig-xu2020-PVN-qc-discard-detected
+plotColData(sce.xu, x="sum", y="detected", colour_by="discard")
+```
+
+```{r}
+#| label: fig-xu2020-PVN-qc-discard-ERCC-mito
+plotColData(sce.xu, x="altexps_ERCC_percent", y="subsets_Mito_percent", colour_by="discard")
+```
+
+```{r}
+#| label: fig-xu2020-PVN-qc-discard-core_label
+sce.xu <- sce.xu[ , meta_data$sample_id]
+colData(sce.xu) %<>% cbind(meta_data)
+library(scales)
+plotColData(sce.xu, x="sum", y="detected", colour_by="discard", other_fields = "core_label") + 
+  facet_wrap(~core_label) + scale_x_continuous(labels = unit_format(unit = "k", scale = 1e-3))
+```
+
+```{r}
+#| label: fig-xu2020-PVN-qc-discard-batch_label
+plotColData(sce.xu, x="sum", y="detected", colour_by="discard", other_fields = "batch_label") + 
+  facet_wrap(~batch_label)  + scale_x_continuous(labels = unit_format(unit = "k", scale = 1e-3))
+```
+
+```{r}
+#| label: fig-xu2020-PVN-qc-highest-expression
+plotHighestExprs(sce.xu, exprs_values = "counts",  colour_cells_by="detected")
+```
+
+```{r}
+#| label: process-xu2020-PVN-qc-discard-features
+sce.xu.keep_feature <- nexprs(
+  sce.xu,
+  byrow = TRUE,
+  detection_limit = 1) >= 2
+rowData(sce.xu)$discard <- ! sce.xu.keep_feature
+table(rowData(sce.xu)$discard)
+```
+
+
+```{r}
+#| label: process-xu2020-PVN-qc-discard-and-normalise
+sce.xu <- sce.xu[!rowData(sce.xu)$discard, 
+                 !colData(sce.xu)$discard]
+
+library(scran)
+sce.xu <- computeSumFactors(sce.xu)
+sce.xu <- logNormCounts(sce.xu)
+```
+
+```{r}
+#| label: fig-xu2020-PVN-qc-pca
+#| fig.width: 14
+#| fig.height: 12
+sce.xu <- runPCA(
+  sce.xu,
+  ncomponents = 30)
+sce.xu$cluster1_label %<>% as_factor()
+names(sce.xu$cluster1_color) <- sce.xu$cluster1_label
+sce.xu$cluster1_color %<>% as_factor()
+sce.xu$cluster1_color <- fct_reorder(sce.xu$cluster1_color, sce.xu$cluster1_id)
+plotPCA(sce.xu, ncomponents = 4, colour_by = "cluster1_label",size_by = "detected", shape_by = "batch_label") * scale_colour_discrete(type = levels(sce.xu$cluster1_color))
+
+sce.xu <- runUMAP(sce.xu, pca = 10)
+```
+
+```{r}
+dec <- modelGeneVar(sce.xu)
+sce.xu.hvg <- getTopHVGs(sce.xu, prop=0.1)
+```
+
+
+```{r}
+genes_stk_vln_repr <- unique(c(
+  "Sim1",
+  "Slc17a6",
+  "Slc32a1",
+  "Fos",
+  "Gad2",
+  "Oxt",
+  "Pdyn",
+  "Avp",
+  "Npy1r",
+  "Sst",
+  "Trh",
+  "Mc3r",
+  "Mc4r",
+  "Crh",
+  "Scgn",
+  "Fam150b",
+  "Alk",
+  "Ntng1",
+  "Reln",
+  "Penk",
+  opioid_system_genes
+))
+
+```
+
+```{r}
+#| label: fig-xu2020-PVN-gr-heatmap
+#| fig.width: 6
+#| fig.height: 5
+plotGroupedHeatmap(
+  sce.xu,
+  features=genes_stk_vln_repr,
+  group=c("cluster1_label"), 
+  scale = F,
+  center=F)
+```
+
+```{r}
+#| label: fig-xu2020-PVN-cluster-heatmap
+#| fig.width: 14
+#| fig.height: 7
+
+col_mat <- levels(sce.xu$cluster1_color)
+names(col_mat) <- 1:15
+plotHeatmap(
+  sce.xu,
+  features = genes_stk_vln_repr,
+  colour_columns_by = "cluster1_label",
+  column_annotation_colours = list(cluster1_label = col_mat),
+  order_columns_by = c("cluster1_label", "Slc17a6", "Gad2")
+  #order_columns_by = c("cluster1_label", "Crh", "Trh", "Fam150b", "Alk", "Scgn")
+  )
+```
+```{r}
+#| label: fig-xu2020-PVN-sort-heatmap
+#| fig.width: 14
+#| fig.height: 7
+
+col_mat <- levels(sce.xu$cluster1_color)
+names(col_mat) <- 1:15
+plotHeatmap(
+  sce.xu,
+  features = genes_stk_vln_repr,
+  colour_columns_by = "cluster1_label",
+  column_annotation_colours = list(cluster1_label = col_mat),
+  order_columns_by = c("Crh", "Fam150b", "Alk", "Scgn", "Trh", "Sst", "Avp", "Oxt")
+  )
+```
+
+```{r}
+#| label: fig-xu2020-PVN-vln
+#| fig.width: 14
+#| fig.height: 10
+plotExpression(
+  sce.xu,
+  features = genes_stk_vln_repr,
+  x = "cluster1_label",
+  colour_by = "cluster1_label", ncol = 4) * 
+  scale_colour_discrete(type = levels(sce.xu$cluster1_color))
+```
+
+```{r}
+#| label: convert-xu2020-PVN-to-seurat
+srt.xu <- Seurat::as.Seurat(
+  sce.xu,
+  counts = "counts",
+  data = NULL)
+srt.xu <- RenameAssays(srt.xu, assay.name = "originalexp", new.assay.name = "RNA")
+DefaultAssay(srt.xu) <- "RNA"
+srt.xu <- Store_Palette_Seurat(seurat_object = srt.xu, palette = rev(brewer.pal(n = 11, name = "Spectral")), palette_name = "expr_Colour_Pal")
+srt.xu <- Store_Palette_Seurat(seurat_object = srt.xu, palette = levels(sce.xu$cluster1_color), palette_name = "cluster_Colour_Pal")
+names(srt.xu@misc$cluster_Colour_Pal) <- levels(sce.xu$cluster1_label)
+
+srt.xu$cluster1_label %<>% as.numeric()
+srt.xu$cluster1_label %<>% as_factor()
+
+srt.xu.npcs <- 30
+Idents(srt.xu) <- "cluster1_label"
+srt.xu@meta.data |> glimpse()
+```
+
+```{r}
+#| label: fig-xu2020-PVN-srt-init-vst-features
+srt.xu <- FindVariableFeatures(srt.xu, selection.method = "vst", nfeatures = 1000)
+
+srt.xu.hvg <- VariableFeatures(srt.xu)
+var_regex <- "^Hla-|^Ig[hjkl]|^Rna|^mt-|^Rp[sl]|^Hb[^(p)]|^Gm"
+srt.xu.hvg <- srt.xu.hvg[str_detect(pattern = var_regex, string = srt.xu.hvg, negate = TRUE)]
+
+srt.xu.keep_genes <-
+  c(gene_int, srt.xu.hvg) %>%
+  unique() %>%
+  .[!. %in% housekeeping_mouse] %>%
+  .[!. %in% sex_genes] %>%
+  .[!. %in% c(stress_genes, ieg_gene_list$Mus_musculus_IEG)]
+glimpse(srt.xu.keep_genes)
+
+srt.xu.hvg <- srt.xu.hvg[srt.xu.hvg %in% srt.xu.keep_genes]
+
+
+srt.xu.top20 <- head(srt.xu.hvg, 20)
+srt.xu.top20 
+
+plot1 <- VariableFeaturePlot(srt.xu)
+LabelPoints(plot = plot1, points = srt.xu.top20, repel = TRUE, xnudge = 0, ynudge = 0)
+
+
+srt.xu.all.genes <- rownames(srt.xu)
+srt.xu <- ScaleData(srt.xu, features = srt.xu.all.genes)
+```
+
+```{r}
+#| label: fig-xu2020-PVN-vln-cell-cycle
+#| fig.width: 14
+#| fig.height: 10
+library(gprofiler2)
+mmus_s <- gorth(cc.genes.updated.2019$s.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+mmus_g2m <- gorth(cc.genes.updated.2019$g2m.genes, source_organism = "hsapiens", target_organism = "mmusculus")$ortholog_name
+
+srt.xu <- CellCycleScoring(srt.xu, s.features = mmus_s, g2m.features = mmus_g2m)
+table(srt.xu[[]]$Phase)
+
+VlnPlot(srt.xu, features = c("S.Score","G2M.Score"), cols = srt.xu@misc$cluster_Colour_Pal) & 
+  theme(plot.title = element_text(size=10))
+```
+
+```{r}
+#| label: process-xu2020-PVN-srt-scTransform
+srt.xu <- SCTransform(
+  srt.xu,
+  variable.features.n = 2000,
+  method = "glmGamPoi",
+  ncells = ncol(srt.xu),
+  return.only.var.genes = FALSE,
+  vars.to.regress = c(
+    "subsets_Mito_percent",
+    "altexps_ERCC_percent",
+    "S.Score",
+    "G2M.Score"),
+  verbose = F)
+
+srt.xu.hvg <- head(VariableFeatures(srt.xu), 1000)
+srt.xu.hvg <- srt.xu.hvg[str_detect(pattern = var_regex, string = srt.xu.hvg, negate = TRUE)]
+
+srt.xu.keep_genes <-
+  c(gene_int, srt.xu.hvg) %>%
+  unique() %>%
+  .[!. %in% housekeeping_mouse] %>%
+  .[!. %in% sex_genes] %>%
+  .[!. %in% c(stress_genes, ieg_gene_list$Mus_musculus_IEG)]
+glimpse(srt.xu.keep_genes)
+
+srt.xu.hvg <- srt.xu.hvg[srt.xu.hvg %in% srt.xu.keep_genes]
+
+srt.xu <- srt.xu %>%
+  RunPCA(features = srt.xu.keep_genes, npcs = srt.xu.npcs, seed.use = reseed, verbose = FALSE)
+
+srt.xu <- BuildClusterTree(
+  object = srt.xu,
+  features = srt.xu.keep_genes,
+  reorder = TRUE,
+  verbose = TRUE)
+srt.xu@tools$BuildClusterTree$tip.label %<>% str_remove("g")
+
+srt.xu
+```
+
+```{r}
+#| label: fig-xu2020-PVN-cluster-tree
+PlotClusterTree(srt.xu)
+```
+
+
+```{r}
+#| label: fig-xu2020-PVN-pca-elbow
+ElbowPlot(srt.xu, ndims = srt.xu.npcs) # 21
+```
+
+```{r}
+#| label: process-xu2020-PVN-umap-ref
+invisible(gc())
+set.seed(reseed)
+
+selected_pcs <-
+  seq_len(21)
+
+if (!file.exists(here(output_dir, "xu2020-metabolic-and-opioids-in-neurons-init-umap-search-ref.Rds"))) {
+  
+  source(here(src_dir, "scDEED.R"))
+  library(furrr)
+
+  permuted.srt.xu <- Permuted(srt.xu, K = 21)
+
+  invisible(gc())
+  set.seed(reseed)
+  
+  umap_example <- scDEED(
+    input_data = srt.xu,
+    K = 21,
+    n_neighbors = seq(from = 5, to = 35, by = 10),
+    min.dist = c(0.01, 0.05, 0.1, 0.25, 0.5, 0.8),
+    reduction.method = "umap",
+    rerun = FALSE,
+    permuted = permuted.srt.xu,
+    default_assay = "SCT"
+  )
+
+  readr::write_rds(
+    x = umap_example,
+    file = here(output_dir, "xu2020-metabolic-and-opioids-in-neurons-init-umap-search-ref.Rds")
+  )
+} else {
+  umap_example <-
+    read_rds(here(output_dir, "xu2020-metabolic-and-opioids-in-neurons-init-umap-search-ref.Rds"))
+}
+
+umap_example$num_dubious
+```
+
+```{r}
+#| label: fig-xu2020-PVN-unsupervised-ref
+invisible(gc())
+set.seed(seed = reseed)
+
+srt.xu <-
+  srt.xu |>
+  FindNeighbors(
+    dims = selected_pcs,
+    k.param = umap_example$num_dubious |>
+      dplyr::slice_min(
+        order_by = c(number_dubious_cells),
+        n = 1
+      ) |>
+      dplyr::slice_min(
+        order_by = c(min.dist),
+        n = 1
+      ) |>
+      pull(n_neighbors),
+    annoy.metric = "cosine",
+    n.trees = 100,
+    verbose = FALSE
+  )
+
+srt.xu <-
+  srt.xu |>
+  RunUMAP(
+    dims = selected_pcs,
+    reduction.name = "umap",
+    reduction.key = "UMAP_",
+    return.model = TRUE,
+    n.epochs = 1000L,
+    n.neighbors = umap_example$num_dubious |>
+      dplyr::slice_min(
+        order_by = c(number_dubious_cells),
+        n = 1
+      ) |>
+      dplyr::slice_min(
+        order_by = c(min.dist),
+        n = 1
+      ) |>
+      pull(n_neighbors),
+    min.dist = umap_example$num_dubious |>
+      dplyr::slice_min(
+        order_by = c(number_dubious_cells),
+        n = 1
+      ) |>
+      dplyr::slice_min(
+        order_by = c(min.dist),
+        n = 1
+      ) |>
+      pull(min.dist),
+    seed.use = reseed,
+    verbose = FALSE
+  )
+```
+
+```{r}
+#| label: fig-xu2020-umap-pvn-split-25
+#| fig-width: 5
+#| fig-height: 4
+ColorDimSplit(srt.xu, node = 25)
+```
+
+```{r}
+#| label: fig-xu2020-umap-pvn-split-27
+#| fig-width: 5
+#| fig-height: 4
+ColorDimSplit(srt.xu, node = 27)
+```
+
+```{r}
+#| label: fig-xu2020-umap-pvn-split-29
+#| fig-width: 5
+#| fig-height: 4
+ColorDimSplit(srt.xu, node = 29)
+```
+
+```{r}
+#| label: fig-xu2020-umap-pvn-types
+#| fig-width: 5
+#| fig-height: 4
+DimPlot_scCustom(srt.xu, reduction = "umap", alpha = 0.7, label = T, colors_use = srt.xu@misc$cluster_Colour_Pal)
+```
+```{r}
+#| label: process-xu2020-pvn-feature
+srt.xu.markers <- FindAllMarkers(
+  srt.xu,
+  only.pos = TRUE,
+  test.use = "LR",
+  random.seed = reseed,
+  return.thresh = 0.0005,
+  verbose = F) %>%
+    Add_Pct_Diff()
+
+srt.xu.markers %<>%
+  pull(gene) %>%
+  gprofiler2::gconvert(
+  .,
+  organism = "mmusculus",
+  target = "MGI",
+  numeric_ns = "",
+  mthreshold = Inf,
+  filter_na = TRUE
+) %>%
+  dplyr::select(name, description) %>%
+  right_join(srt.xu.markers, by = c("name" = "gene"))
+
+srt.xu.markers %<>% 
+  dplyr::rename(gene = "name")
+
+xu.top_5_unique <- Extract_Top_Markers(
+  marker_dataframe = srt.xu.markers,
+  num_genes = 5,
+  rank_by = "avg_log2FC",
+  named_vector = FALSE,
+  make_unique = TRUE)
+
+xu.top_5_unique
+
+
+xu.pvn.to.plot <- unique(c(
+    metabolic_signaling_genes, 
+    opioid_system_genes[opioid_system_genes %in% srt.xu@assays$SCT@data@Dimnames[[1]]],
+    "Sim1",
+    "Fos",
+    "Slc17a6",
+    "Slc32a1",
+    "Gad1",
+    "Gad2",
+    "Scgn",
+    "Crh",
+    "Trh",
+    "Oxt",
+    "Avp",
+    "Sst",
+    "Cartpt", 
+    "Adcyap1",
+    "Bdnf",
+    "Cck",
+    "Gal",
+    "Ghrh",
+    "Grp",
+    "Nmb",
+    "Nts",
+    "Pmch",
+    "Reln",
+    "Tac1",
+    "Pomc",
+    "Npy1r",
+    "Ntng1"))
+
+xu.pvn.to.plot.sorted <- Extract_Top_Markers(
+  marker_dataframe = srt.xu.markers |> dplyr::filter(gene %in% xu.pvn.to.plot),
+  num_genes = 20,
+  rank_by = "avg_log2FC",
+  named_vector = FALSE,
+  make_unique = TRUE)
+
+xu.pvn.to.plot[!xu.pvn.to.plot %in% xu.pvn.to.plot.sorted]
+inserting_elements <- c("Nmb", "Mc3r", "Oprm1", "Ghrh")
+
+
+xu.pvn.to.plot.sorted <-
+  c(
+    append(xu.pvn.to.plot.sorted[1:which(xu.pvn.to.plot.sorted == "Pcsk2")], inserting_elements[1]),
+    append(xu.pvn.to.plot.sorted[which(xu.pvn.to.plot.sorted == "Pmch"):which(xu.pvn.to.plot.sorted == "Npy1r")] , inserting_elements[2]),
+    append(xu.pvn.to.plot.sorted[which(xu.pvn.to.plot.sorted == "Mc4r"):which(xu.pvn.to.plot.sorted == "Alk")], inserting_elements[3]),
+    append(xu.pvn.to.plot.sorted[which(xu.pvn.to.plot.sorted == "Cartpt"):which(xu.pvn.to.plot.sorted == "Fos")], inserting_elements[4]),
+    xu.pvn.to.plot.sorted[which(xu.pvn.to.plot.sorted == "Reln"):length(xu.pvn.to.plot.sorted)]
+  )
+
+xu.pvn.to.plot <- xu.pvn.to.plot.sorted
+
+# Print the updated vector
+print(xu.pvn.to.plot)
+```
+
+
+```{r}
+#| label: fig-xu2020-pvn-feature
+#| fig-width: 12
+#| fig-height: 20
+FeaturePlot_scCustom(
+  srt.xu,
+  reduction = "umap",
+  features = xu.pvn.to.plot,
+  layer = "data",
+  alpha_exp = 0.6,
+  max.cut = "q97",
+  label = F,
+  num_columns = 4
+) #* NoLegend()
+```
+
+
+```{r}
+#| label: fig-stack-vln-xu2020-pvn-features
+#| fig-width: 12
+#| fig-height: 32
+Stacked_VlnPlot(srt.xu, features = xu.pvn.to.plot, colors_use = srt.xu@misc$cluster_Colour_Pal)
+```
+
+```{r}
+#| label: fig-heatmap-xu2020-pvn-features
+#| fig-width: 14
+#| fig-height: 7
+DoHeatmap(
+  object = srt.xu,
+  features = xu.pvn.to.plot,
+  cells = scCustomize::Random_Cells_Downsample(
+    seurat_object = srt.xu,
+    num_cells = 150,
+    allow_lower = T),
+  disp.min = -2.5,
+  disp.max = NULL,
+  slot = "scale.data",
+  assay = NULL,
+  label = TRUE,
+  size = 8,
+  hjust = 0.5,
+  vjust = -2,
+  angle = 0,
+  raster = TRUE,
+  draw.lines = TRUE,
+  lines.width = NULL,
+  group.bar.height = 0.07,
+  group.colors = srt.xu@misc$cluster_Colour_Pal) +
+  scale_fill_viridis(
+    option = "viridis",
+    direction = 1) &
+  NoLegend()
+```
+
+```{r}
+#| label: fig-heatmap-xu2020-pvn-top-features
+#| fig-width: 14
+#| fig-height: 10
+DoHeatmap(
+  object = srt.xu,
+  features = xu.top_5_unique,
+  cells = scCustomize::Random_Cells_Downsample(
+    seurat_object = srt.xu,
+    num_cells = 150,
+    allow_lower = T),
+  disp.min = -2.5,
+  disp.max = NULL,
+  slot = "scale.data",
+  assay = NULL,
+  label = TRUE,
+  size = 8,
+  hjust = 0.5,
+  vjust = -2.4,
+  angle = 0,
+  raster = TRUE,
+  draw.lines = TRUE,
+  lines.width = NULL,
+  group.bar.height = 0.035,
+  group.colors = srt.xu@misc$cluster_Colour_Pal) +
+  scale_fill_viridis(
+    option = "viridis",
+    direction = 1) &
+  NoLegend()
+```
+
+
+## Load data from Lopez JP et al (2021)
+
+```{r}
+#| label: convert-lopez2021-PVN-to-seurat
+srt.lopez <-  schard::h5ad2seurat(here(
+  "/data/1_heteroAstrocytes/PRJNA679294/data",
+  "class_cello/PRJNA679294-whole_dataset-0.001-cello_annotation.h5ad"
+), use.raw = TRUE)
+
+
+Idents(srt.lopez) <- "ora_celltype"
+table(Idents(srt.lopez))
+```
+
+```{r}
+#| label: fig-lopez2021-pvn-feature-all-cells
+#| fig-width: 12
+#| fig-height: 24
+FeaturePlot_scCustom(
+  srt.lopez,
+  reduction = "Xpacmap_",
+  features = xu.pvn.to.plot,
+  layer = "data",
+  alpha_exp = 0.3,
+  max.cut = "q95",
+  label = F,
+  num_columns = 4
+) #* NoLegend()
+```
+
+```{r}
+#| label: fig-lopez2021-pacmap-pvn-types-all-cells
+#| fig-width: 10
+#| fig-height: 4
+DimPlot_scCustom(srt.lopez, reduction = "Xpacmap_", group.by = "ora_celltype", split.by = "libname", alpha = 0.3, label = F)
+```
+
+
+```{r}
+#| label: process-lopez2021-pvn-types-subset-neurons
+srt.lopez <- subset(srt.lopez, idents = c("Neurons"), subset = libname == "control")
+
+Idents(srt.lopez) <- "k_tree"
+
+print(srt.lopez)
+invisible(gc())
+table(Idents(srt.lopez))
+```
+
+```{r}
+#| label: fig-lopez2021-pacmap-pvn-types-subset-neurons
+#| fig-width: 5
+#| fig-height: 4
+DimPlot_scCustom(srt.lopez, reduction = "Xpacmap_", alpha = 0.3, label = F)
+```
+
+```{r}
+#| label: fig-lopez2021-umap-pvn-types-subset-neurons
+#| fig-width: 5
+#| fig-height: 4
+DimPlot_scCustom(srt.lopez, reduction = "Xumap_", alpha = 0.3, label = F)
+```
+
+```{r}
+#| label: process-lopez2021-PVN-srt-scTransform
+srt.lopez <- SCTransform(
+  srt.lopez,
+  variable.features.n = 2000,
+  method = "glmGamPoi",
+  ncells = ncol(srt.lopez),
+  return.only.var.genes = FALSE,
+  vars.to.regress = c(
+    "log10GenesPerUMI",
+    "percent_mito_ribo",
+    "S.Score",
+    "G2M.Score"),
+  verbose = F)
+
+srt.lopez.hvg <- head(VariableFeatures(srt.lopez), 1000)
+srt.lopez.hvg <- srt.lopez.hvg[str_detect(pattern = var_regex, string = srt.lopez.hvg, negate = TRUE)]
+
+srt.lopez.keep_genes <-
+  c(gene_int, srt.lopez.hvg) %>%
+  unique() %>%
+  .[!. %in% housekeeping_mouse] %>%
+  .[!. %in% sex_genes] %>%
+  .[!. %in% c(stress_genes, ieg_gene_list$Mus_musculus_IEG)]
+glimpse(srt.lopez.keep_genes)
+
+srt.lopez.hvg <- srt.lopez.hvg[srt.lopez.hvg %in% srt.lopez.keep_genes]
+
+srt.lopez <- srt.lopez %>%
+  RunPCA(features = srt.lopez.keep_genes, npcs = srt.xu.npcs, seed.use = reseed, verbose = FALSE)
+
+srt.lopez
+```
+
+```{r}
+#| label: transfer-query
+# Find transfer anchors
+anchors <- FindTransferAnchors(
+  reference = srt.xu,
+  query = srt.lopez,
+  dims = selected_pcs,
+  reference.reduction = "pca"
+)
+
+# Map the query data onto the reference UMAP and transfer cell type annotations
+srt.lopez <- MapQuery(
+  anchorset = anchors,
+  reference = srt.xu,
+  query = srt.lopez,
+  refdata = list(cluster1_label = "cluster1_label"), # Transfer cell type labels
+  reference.reduction = "pca",
+  reduction.model = "umap"
+)
+
+srt.lopez <- Store_Palette_Seurat(seurat_object = srt.lopez, palette = levels(sce.xu$cluster1_color), palette_name = "cluster_Colour_Pal")
+names(srt.lopez@misc$cluster_Colour_Pal) <- levels(sce.xu$cluster1_label)
+
+srt.lopez$predicted.cluster1_label %<>% fct(levels = levels(srt.xu)[levels(srt.xu) %in% unique(srt.lopez$predicted.cluster1_label)])
+# The projected UMAP coordinates are in srt.lopez[["ref.umap"]]
+```
+
+```{r}
+#| label: fig-types-all-cells-with-query,
+#| fig.height: 4
+#| fig.width: 10
+# Plot the reference UMAP colored by cell types
+p1 <- DimPlot_scCustom(
+  seurat_object = srt.xu,
+  reduction = "umap",
+  group.by = "cluster1_label",
+  pt.size = 1,
+  colors_use = srt.lopez@misc$cluster_Colour_Pal,
+  shuffle = TRUE,
+  seed = reseed,
+  alpha = 0.5,
+  repel = TRUE,
+  label = TRUE,
+  label.size = 5
+) + ggtitle("Reference: Cell Type Annotations")
+
+# Plot the query cells projected onto the reference UMAP, colored by the predicted cell types
+p2 <- DimPlot_scCustom(
+  seurat_object = srt.lopez,
+  reduction = "ref.umap",
+  group.by = "predicted.cluster1_label",
+  pt.size = 1,
+  colors_use = srt.lopez@misc$cluster_Colour_Pal,
+  shuffle = TRUE,
+  seed = reseed,
+  alpha = 0.3,
+  repel = TRUE,
+  label = TRUE,
+  label.size = 5
+) + NoLegend() + ggtitle("Query: Transferred Cell Type Labels")
+
+# Combine the plots
+p1 + p2 + plot_layout(guides = "collect")
+```
+
+
+```{r}
+#| label: fig-lopez2021-ref-umap-pvn-features
+#| fig-width: 12
+#| fig-height: 24
+lopez.pvn.to.plot <- unique(c(
+    "Oprd1",
+    "Cck", 
+    xu.pvn.to.plot))
+
+FeaturePlot_scCustom(
+  srt.lopez,
+  reduction = "ref.umap",
+  features = lopez.pvn.to.plot,
+  layer = "data",
+  alpha_exp = 0.3,
+  max.cut = "q99",
+  label = F,
+  num_columns = 4
+) #* NoLegend()
+```
+
+```{r}
+#| label: fig-stack-vln-lopez2021-pvn-features
+#| fig-width: 12
+#| fig-height: 32
+Stacked_VlnPlot(
+  srt.lopez,
+  features = lopez.pvn.to.plot,
+  group.by = "predicted.cluster1_label",
+  colors_use = srt.lopez@misc$cluster_Colour_Pal)
+```
+
+```{r}
+#| label: fig-heatmap-lopez2021-pvn-features
+#| fig-width: 14
+#| fig-height: 7
+DoHeatmap(
+  object = srt.lopez,
+  features = lopez.pvn.to.plot,
+  cells = scCustomize::Random_Cells_Downsample(
+    seurat_object = srt.lopez,
+    num_cells = 25,
+    allow_lower = T),
+  disp.min = -2.5,
+  disp.max = NULL,
+  slot = "scale.data",
+  group.by = "predicted.cluster1_label",
+  assay = NULL,
+  label = TRUE,
+  size = 8,
+  hjust = 0.5,
+  vjust = -2,
+  angle = 0,
+  raster = TRUE,
+  draw.lines = TRUE,
+  lines.width = NULL,
+  group.bar.height = 0.07,
+  group.colors = srt.lopez@misc$cluster_Colour_Pal) +
+  scale_fill_viridis(
+    option = "viridis",
+    direction = 1) &
+  NoLegend()
+```
+
 
 ## Load Kim DW et al., 2020[@kim2020]
 
 ```{r}
-#| label: load-data
-#| cache: false
-anndata <- sc$read(here(
-  "kim2020_combined.h5ad"
-))
-```
-
-### Convert adata object to R AnnDataR6 object.
-
-```{r}
-#| label: convert-to-r
-adata <- py_to_r(anndata)
-class(adata)
-class(adata$X)
-adata
-```
-
-```{r}
 #| label: convert-to-seurat
-srt_path <- here(
-  "data",
-  sprintf("%s-whole_dataset-simple.h5Seurat", bioproject)
-)
+srt.kim <-  schard::h5ad2seurat(here(
+  data_dir,
+  "kim2020_combined.h5ad"
+),use.raw = TRUE)
 
-expr_mtx <- t(as.matrix(adata$X))
-colnames(expr_mtx) <- rownames(adata$X)
-rownames(expr_mtx) <- adata$var$features
-srt <- CreateSeuratObject(
-  expr_mtx,
-  assay = "RNA",
-  project = "kim2020_Hypoth_dev",
-  meta.data = as.data.frame(adata$obs)
-)
+X_umap <- srt.kim@meta.data |> dplyr::select(X, Y, Z) |> as.matrix()
+colnames(X_umap) <- c("UMAP_1", "UMAP_2", "UMAP_3")
+rownames(X_umap) <- colnames(srt.kim)
+srt.kim[["umap"]] <- CreateDimReducObject(embeddings = X_umap, key = "umap_", assay = DefaultAssay(srt.kim))
+srt.kim$Age %<>% forcats::fct(levels = c(
+  "E10", "E11", "E12", "E13", "E14", 
+  "E15", "E16", "E17", "E18", "P0", 
+  "P2", "P4", "P8", "P10", "P14", "P23", "P45"))
 
-X_umap <- adata$obs |>
-  select(X, Y) |>
-  as.matrix()
-colnames(X_umap) <- c("UMAP_1", "UMAP_2")
-rownames(X_umap) <- colnames(expr_mtx)
-srt[["umap"]] <- CreateDimReducObject(embeddings = X_umap, key = "umap_", assay = DefaultAssay(srt))
-
-Idents(srt) <- "age"
-srt <- Store_Palette_Seurat(seurat_object = srt, palette = rev(brewer.pal(n = 11, name = "Spectral")), palette_name = "expr_Colour_Pal")
+Idents(srt.kim) <- "Age"
+srt.kim <- Store_Palette_Seurat(seurat_object = srt.kim, palette = rev(brewer.pal(n = 11, name = "Spectral")), palette_name = "expr_Colour_Pal")
 ```
 
 ## Load Romanov et al., 2020[@romanov2020]
 
 ```{r}
 #| label: load-seurat
-print(srt)
-rar2020.srt.pub <- readRDS("/data/1_heteroAstrocytes/PRJNA548917/old/oldCCA_nae_srt.rds")
-rar2020.srt.pub <- UpdateSeuratObject(rar2020.srt.pub)
-Idents(rar2020.srt.pub) <-
-  factor(rar2020.srt.pub$wtree,
+print(srt.kim)
+srt.romanov.pub <- readRDS("/data/1_heteroAstrocytes/PRJNA548917/old/oldCCA_nae_srt.rds")
+srt.romanov.pub <- UpdateSeuratObject(srt.romanov.pub)
+Idents(srt.romanov.pub) <-
+  factor(srt.romanov.pub$wtree,
     ordered = TRUE
   )
 
 # Consistent colours and clusters names
 colours_wtree <- setNames(read_lines(here(data_dir, "colours_wtree.tsv")), 1:45)
 
-rar2020.srt.pub$age <-
-  Cells(rar2020.srt.pub) |>
+srt.romanov.pub$age <-
+  Cells(srt.romanov.pub) |>
   str_split(pattern = ":", simplify = T) %>%
   .[, 1] %>%
   str_split_fixed(pattern = "_", n = 3) %>%
   .[, 3]
-print(rar2020.srt.pub)
-glimpse(rar2020.srt.pub@meta.data)
-table(Idents(rar2020.srt.pub))
+print(srt.romanov.pub)
+glimpse(srt.romanov.pub@meta.data)
+table(Idents(srt.romanov.pub))
 
-rar2020.srt.pub %<>% RenameIdents(object = ., `43` = "mneOXY")
-rar2020.srt.pub %<>% RenameIdents(object = ., `26` = "mneVAS")
-rar2020.srt.pub %<>% RenameIdents(object = ., `31` = "pneSS")
-rar2020.srt.pub %<>% RenameIdents(object = ., `24` = "pneCRH")
-rar2020.srt.pub %<>% RenameIdents(object = ., `15` = "pneTRH")
+srt.romanov.pub %<>% RenameIdents(object = ., `43` = "mneOXY")
+srt.romanov.pub %<>% RenameIdents(object = ., `26` = "mneVAS")
+srt.romanov.pub %<>% RenameIdents(object = ., `31` = "pneSS")
+srt.romanov.pub %<>% RenameIdents(object = ., `24` = "pneCRH")
+srt.romanov.pub %<>% RenameIdents(object = ., `15` = "pneTRH")
 ```
 
 ```{r}
 #| label: n-cells-by-age-all
-rar2020.srt.pub$stage <-
-  rar2020.srt.pub$age %>%
+srt.romanov.pub$stage <-
+  srt.romanov.pub$age %>%
   forcats::fct_collapse(
     Embryonic = c("E15", "E17"),
     Neonatal = c("P0", "P2", "3P2"),
     Pubertal = c("1P10", "P10"),
     Adult = c("P23")
   )
-rar2020.srt.pub$stage %<>% factor(levels = c("Embryonic", "Neonatal", "Pubertal", "Adult"), ordered = TRUE)
-rar2020.srt.pub$stage %>% forcats::fct_count()
+srt.romanov.pub$stage %<>% factor(levels = c("Embryonic", "Neonatal", "Pubertal", "Adult"), ordered = TRUE)
+srt.romanov.pub$stage %>% forcats::fct_count()
 ```
 
 ```{r}
 #| label: correct-age-labels
-rar2020.srt.pub$age <-
+srt.romanov.pub$age <-
   plyr::mapvalues(
-    x = rar2020.srt.pub$age,
+    x = srt.romanov.pub$age,
     from = c("E15", "E17", "P0", "P2", "3P2", "1P10", "P10", "P23"),
     to = c("E15", "E17", "P00", "P02", "P02", "P10", "P10", "P23")
   )
 
 
 
-rar2020.srt.pub$age %>% forcats::fct_count()
+srt.romanov.pub$age %>% forcats::fct_count()
 ```
 
 ```{r}
-#| label: plot-feature-metabolic-romanov2020
+#| label: fig-feature-metabolic-romanov2020
 #| fig-width: 18
 #| fig-height: 36
 FeaturePlot(
-  rar2020.srt.pub,
+  srt.romanov.pub,
   features = c(neurotrans, metabolic_signaling_genes, "Crh", "Trh", "Oxt"),
   label = F,
   blend = F,
@@ -376,10 +1245,10 @@ FeaturePlot(
 ```{r}
 #| label: e-metabolic-representation
 sbs_mtx <-
-  rar2020.srt.pub@assays$RNA@data %>%
+  srt.romanov.pub@assays$RNA@data %>%
   as.data.frame() %>%
   t()
-rownames(sbs_mtx) <- colnames(rar2020.srt.pub)
+rownames(sbs_mtx) <- colnames(srt.romanov.pub)
 
 # Filter features
 filt_low_genes <-
@@ -391,7 +1260,7 @@ sbs_mtx %<>% .[, filt_low_genes]
 min_filt_vector2 <-
   sbs_mtx %>%
   as_tibble() %>%
-  select(all_of(filt_low_genes)) %>%
+  dplyr::select(all_of(filt_low_genes)) %>%
   summarise(across(.fns = ~ quantile(.x, .005))) %>%
   as.list() %>%
   map(as.double) %>%
@@ -406,7 +1275,7 @@ content_sbs_mtx <-
 ```
 
 ```{r}
-#| label: upset-group-metabolic-all-romanov2020
+#| label: fig-upset-group-metabolic-all-romanov2020
 #| fig-height: 24
 #| fig-asp: 1.214
 upset(
@@ -427,7 +1296,7 @@ upset(
 ```
 
 ```{r}
-#| label: upset-not-grouped-metabolic-all-romanov2020
+#| label: fig-upset-not-grouped-metabolic-all-romanov2020
 #| fig-height: 24
 #| fig-asp: 1.214
 upset(
@@ -448,8 +1317,8 @@ upset(
 ```{r}
 #| label: merge-metadata-and-expression
 sbs_mtx_full <- content_sbs_mtx |>
-  select(any_of(c(neurotrans, metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
-  dplyr::bind_cols(rar2020.srt.pub@meta.data)
+  dplyr::select(any_of(c(neurotrans, metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+  dplyr::bind_cols(srt.romanov.pub@meta.data)
 
 sbs_mtx_full |> glimpse()
 ```
@@ -458,40 +1327,40 @@ sbs_mtx_full |> glimpse()
 
 ```{r}
 #| label: norm-scale-matrix
-srt <- NormalizeData(srt)
-srt <- FindVariableFeatures(srt, selection.method = "vst", nfeatures = 3000)
-# all.genes <- rownames(srt)
-# srt <- ScaleData(srt, features = all.genes)
-srt <- ScaleData(srt)
+srt.kim <- NormalizeData(srt.kim)
+srt.kim <- FindVariableFeatures(srt.kim, selection.method = "vst", nfeatures = 3000)
+# all.genes <- rownames(srt.kim)
+# srt.kim <- ScaleData(srt.kim, features = all.genes)
+srt.kim <- ScaleData(srt.kim)
 ```
 
 ```{r}
 #| label: transfer-annotations
 hypoth.anchors <- FindTransferAnchors(
-  reference = rar2020.srt.pub, query = srt, dims = 1:30,
+  reference = srt.romanov.pub, query = srt.kim, dims = 1:30,
   reference.reduction = "pca"
 )
-predictions <- TransferData(anchorset = hypoth.anchors, refdata = rar2020.srt.pub$wtree, dims = 1:30)
-srt <- AddMetaData(srt, metadata = predictions)
-table(srt$predicted.id)
+predictions <- TransferData(anchorset = hypoth.anchors, refdata = srt.romanov.pub$wtree, dims = 1:30)
+srt.kim <- AddMetaData(srt.kim, metadata = predictions)
+table(srt.kim$predicted.id)
 ```
 
 ```{r}
 #| label: transfer-umap
-rar2020.srt.pub <- RunUMAP(rar2020.srt.pub, dims = 1:30, reduction = "pca", return.model = TRUE)
-srt <- IntegrateEmbeddings(
-  anchorset = hypoth.anchors, reference = rar2020.srt.pub, query = srt,
+srt.romanov.pub <- RunUMAP(srt.romanov.pub, dims = 1:30, reduction = "pca", return.model = TRUE)
+srt.kim <- IntegrateEmbeddings(
+  anchorset = hypoth.anchors, reference = srt.romanov.pub, query = srt.kim,
   new.reduction.name = "ref.pca"
 )
-srt <- ProjectUMAP(
-  query = srt, query.reduction = "ref.pca", reference = rar2020.srt.pub,
+srt.kim <- ProjectUMAP(
+  query = srt.kim, query.reduction = "ref.pca", reference = srt.romanov.pub,
   reference.reduction = "pca", reduction.model = "umap"
 )
-Idents(srt) <- srt$Cluster
+Idents(srt.kim) <- srt.kim$Cluster
 ```
 
 ```{r}
-all.genes <- rownames(srt)
+all.genes <- rownames(srt.kim)
 gene.scale <- c(
   cnbn,
   opioid_system_genes,
@@ -506,22 +1375,22 @@ gene.scale <- c(
 ```
 
 ```{r}
-#| label: plot-reference-umap-transfered
-p1 <- DimPlot(rar2020.srt.pub,
+#| label: fig-reference-umap-transfered
+p1 <- DimPlot(srt.romanov.pub,
   reduction = "umap", group.by = "wtree", label = F
 ) + NoLegend() + ggtitle("Reference annotations")
-p2 <- DimPlot(srt,
+p2 <- DimPlot(srt.kim,
   reduction = "ref.umap", group.by = "Age", label = F
 ) + NoLegend() + ggtitle("Query transferred Embedding (more ages)")
 p1 + p2
 ```
 
 ```{r}
-#| label: plot-reference-umap-transfered-genes
+#| label: fig-reference-umap-transfered-genes
 #| fig-width: 18
 #| fig-height: 6
 p1 <- FeaturePlot_scCustom(
-  rar2020.srt.pub,
+  srt.romanov.pub,
   reduction = "umap",
   features = c(
     "Oxt",
@@ -536,7 +1405,7 @@ p1 <- FeaturePlot_scCustom(
   na_cutoff = 2
 ) * NoLegend()
 p2 <- FeaturePlot_scCustom(
-  srt,
+  srt.kim,
   reduction = "ref.umap",
   features = c(
     "Oxt",
@@ -554,11 +1423,11 @@ p2 <- FeaturePlot_scCustom(
 ```
 
 ```{r}
-#| label: plot-reference-umap-transfered-genes-Avp-Oxt
+#| label: fig-reference-umap-transfered-genes-Avp-Oxt
 #| fig-width: 7.2
 #| fig-height: 6
 p1 <- FeaturePlot_scCustom(
-  rar2020.srt.pub,
+  srt.romanov.pub,
   reduction = "umap",
   features = c(
     "Oxt",
@@ -570,7 +1439,7 @@ p1 <- FeaturePlot_scCustom(
   na_cutoff = 5
 ) * NoLegend()
 p2 <- FeaturePlot_scCustom(
-  srt,
+  srt.kim,
   reduction = "ref.umap",
   features = c(
     "Oxt",
@@ -585,11 +1454,11 @@ p2 <- FeaturePlot_scCustom(
 ```
 
 ```{r}
-#| label: ref-embedding-split-stage-kim2020-np
+#| label: fig-ref-embedding-split-stage-kim2020-np
 #| fig-height: 21
 #| fig-width: 18
-srt$stage <-
-  srt$Age %>%
+srt.kim$stage <-
+  srt.kim$Age %>%
   forcats::fct_collapse(
     Embryonic = c(
       "E10", "E11", "E12", "E13",
@@ -599,9 +1468,9 @@ srt$stage <-
     Pubertal = c("P14"),
     Adult = c("P45")
   )
-srt$stage %<>% factor(levels = c("Embryonic", "Neonatal", "Pubertal", "Adult"), ordered = TRUE)
+srt.kim$stage %<>% factor(levels = c("Embryonic", "Neonatal", "Pubertal", "Adult"), ordered = TRUE)
 FeaturePlot_scCustom(
-  srt,
+  srt.kim,
   reduction = "ref.umap",
   features = c(
     "Oxt",
@@ -619,11 +1488,11 @@ FeaturePlot_scCustom(
 ```
 
 ```{r}
-#| label: ref-embedding-split-stage-kim2020-crh-alk
+#| label: fig-ref-embedding-split-stage-kim2020-crh-alk
 #| fig-height: 21
 #| fig-width: 18
 FeaturePlot_scCustom(
-  srt,
+  srt.kim,
   reduction = "ref.umap",
   features = c(
     "Fam150a",
@@ -640,11 +1509,11 @@ FeaturePlot_scCustom(
 ```
 
 ```{r}
-#| label: ref-embedding-split-stage-romanov2020-np
+#| label: fig-ref-embedding-split-stage-romanov2020-np
 #| fig-height: 21
 #| fig-width: 18
 FeaturePlot_scCustom(
-  rar2020.srt.pub,
+  srt.romanov.pub,
   reduction = "umap",
   features = c(
     "Oxt",
@@ -662,11 +1531,11 @@ FeaturePlot_scCustom(
 ```
 
 ```{r}
-#| label: ref-embedding-split-stage-romanov2020-crh-alk
+#| label: fig-ref-embedding-split-stage-romanov2020-crh-alk
 #| fig-height: 21
 #| fig-width: 18
 FeaturePlot_scCustom(
-  rar2020.srt.pub,
+  srt.romanov.pub,
   reduction = "umap",
   features = c(
     "Fam150a",
@@ -683,25 +1552,25 @@ FeaturePlot_scCustom(
 ```
 
 ```{r}
-#| label: ref-embedding-selection-of-pvn-neurons
+#| label: fig-ref-embedding-selection-of-pvn-neurons
 if (!file.exists(here(data_dir, "kim2020_pvn_neurons.txt"))) {
-  plot <- DimPlot(object = srt, reduction = "ref.umap")
-  srt <- CellSelector(plot = plot, object = srt, ident = "SelectedCells")
+  plot <- DimPlot(object = srt.kim, reduction = "ref.umap")
+  srt.kim <- CellSelector(plot = plot, object = srt.kim, ident = "SelectedCells")
 
-  selected_cells <- Cells(subset(srt, idents = "SelectedCells"))
+  selected_cells <- Cells(subset(srt.kim, idents = "SelectedCells"))
   write_lines(selected_cells, file = here(data_dir, "kim2020_pvn_neurons.txt"))
 }
 selected_cells <- read_lines(here(data_dir, "kim2020_pvn_neurons.txt"))
-srt <- subset(srt, cells = c(selected_cells, WhichCells(srt, expression = (
+srt.kim <- subset(srt.kim, cells = c(selected_cells, WhichCells(srt.kim, expression = (
     Crh > 0 & (Scgn > 0 | Alk > 0 | Fam150b > 0 | Fam150a > 0)
 ))))
-# srt <- subset(srt, subset = refUMAP_1 > 4 & refUMAP_2 > -1)
+# srt.kim <- subset(srt.kim, subset = refUMAP_1 > 4 & refUMAP_2 > -1)
 
-srt@meta.data <- srt@meta.data |> rename(wtree = predicted.id, age = Age)
+srt.kim@meta.data <- srt.kim@meta.data |> dplyr::rename(wtree = predicted.id, age = Age)
 
-srt <- subset(srt, subset = stage %in% c("Pubertal", "Adult"))
+srt.kim <- subset(srt.kim, subset = stage %in% c("Pubertal", "Adult"))
 
-srt
+srt.kim
 ```
 
 We subset Kim et al., 2020 dataset to only Pubertal and Adult stages.
@@ -711,11 +1580,11 @@ We subset Kim et al., 2020 dataset to only Pubertal and Adult stages.
 ### PVN Neurons from Kim et al. 2020, Nature Communications
 
 ```{r}
-#| label: plot-kim2020-pvn-feature-np-split-by-stages
+#| label: fig-kim2020-pvn-feature-np-split-by-stages
 #| fig-height: 3
 #| fig-width: 21
 FeaturePlot_scCustom(
-  srt,
+  srt.kim,
   reduction = "ref.umap",
   features = c(
     "Oxt",
@@ -731,11 +1600,11 @@ FeaturePlot_scCustom(
 ```
 
 ```{r}
-#| label: plot-kim2020-pvn-feature-metabopioid-split-by-stages
+#| label: fig-kim2020-pvn-feature-metabopioid-split-by-stages
 #| fig-width: 18
 #| fig-height: 21
 FeaturePlot_scCustom(
-  srt,
+  srt.kim,
   reduction = "ref.umap",
   features = c(
     metabolic_signaling_genes,
@@ -750,12 +1619,12 @@ FeaturePlot_scCustom(
 ```{r}
 #| label: e-metabolic-representation-kim2020-pvn
 sbs_mtx <-
-  srt@assays$RNA@layers$data %>%
+  srt.kim@assays$RNA@data %>%
   as.data.frame() %>%
   t()
 
-rownames(sbs_mtx) <- colnames(srt)
-colnames(sbs_mtx) <- rownames(srt)
+rownames(sbs_mtx) <- colnames(srt.kim)
+colnames(sbs_mtx) <- rownames(srt.kim)
 
 # Filter features
 filt_low_genes <-
@@ -767,7 +1636,7 @@ sbs_mtx %<>% .[, filt_low_genes]
 min_filt_vector2 <-
   sbs_mtx %>%
   as_tibble() %>%
-  select(all_of(filt_low_genes)) %>%
+  dplyr::select(all_of(filt_low_genes)) %>%
   summarise(across(.fns = ~ quantile(.x, .005))) %>%
   as.list() %>%
   map(as.double) %>%
@@ -780,21 +1649,21 @@ content_sbs_mtx_kim <-
   as_tibble() %>%
   mutate_all(as.numeric) %>%
   bind_cols(
-    srt@meta.data |> select(wtree, age, stage)
+    srt.kim@meta.data |> dplyr::select(wtree, age, stage)
   )
 ```
 
 #### All
 
 ```{r}
-#| label: upset-group-metabolic-kim2020-pvn
+#| label: fig-upset-group-metabolic-kim2020-pvn
 #| fig-height: 24
 #| fig-asp: 1.214
 upset(
   as.data.frame(
     content_sbs_mtx_kim |>
-      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
-      select(where(~ is.numeric(.x) && sum(.x) > 0))
+      dplyr::select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -812,15 +1681,15 @@ upset(
 #### Pubertal
 
 ```{r}
-#| label: upset-group-metabolic-kim2020-pvn-Pubertal
+#| label: fig-upset-group-metabolic-kim2020-pvn-Pubertal
 #| fig-height: 24
 #| fig-asp: 1.214
 upset(
   as.data.frame(
     content_sbs_mtx_kim |>
-      filter(stage == "Pubertal") |>
-      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
-      select(where(~ is.numeric(.x) && sum(.x) > 0))
+      dplyr::filter(stage == "Pubertal") |>
+      dplyr::select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -838,15 +1707,15 @@ upset(
 #### Adult
 
 ```{r}
-#| label: upset-group-metabolic-kim2020-pvn-Adult
+#| label: fig-upset-group-metabolic-kim2020-pvn-Adult
 #| fig-height: 24
 #| fig-asp: 1.214
 upset(
   as.data.frame(
     content_sbs_mtx_kim |>
-      filter(stage == "Adult") |>
-      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
-      select(where(~ is.numeric(.x) && sum(.x) > 0))
+      dplyr::filter(stage == "Adult") |>
+      dplyr::select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -865,26 +1734,26 @@ upset(
 
 ```{r}
 #| label: subset-pvn
-rar2020.srt.pvn <-
+srt.romanov.pvn <-
     subset(
-        x = rar2020.srt.pub,
+        x = srt.romanov.pub,
         cells = unique(c(
-            WhichCells(rar2020.srt.pub,
+            WhichCells(srt.romanov.pub,
                        idents = c(
                            "mneOXY", "mneVAS",
                            "pneSS", "pneCRH", "pneTRH"
                        )), 
             WhichCells(
-                rar2020.srt.pub,
+                srt.romanov.pub,
                 expression = (Crh > 0 & (Scgn > 0 | Alk > 0 | Fam150b > 0 | Fam150a > 0)))
         )),
         invert = FALSE
     )
 
-table(rar2020.srt.pvn$age)
-table(rar2020.srt.pvn$stage)
+table(srt.romanov.pvn$age)
+table(srt.romanov.pvn$stage)
 
-rar2020.srt.pvn <- subset(rar2020.srt.pvn, subset = stage %in% c("Pubertal", "Adult"))
+srt.romanov.pvn <- subset(srt.romanov.pvn, subset = stage %in% c("Pubertal", "Adult"))
 ```
 
 We subset Romanov et al., 2020 dataset to only Pubertal and Adult
@@ -892,16 +1761,16 @@ stages.
 
 ```{r}
 #| label: after-subset-romanov2020-pvn
-table(rar2020.srt.pvn$age)
-table(rar2020.srt.pvn$stage)
+table(srt.romanov.pvn$age)
+table(srt.romanov.pvn$stage)
 ```
 
 ```{r}
-#| label: plot-romanov2020-pvn-feature-np
+#| label: fig-romanov2020-pvn-feature-np
 #| fig-width: 21
 #| fig-height: 3
 FeaturePlot_scCustom(
-  rar2020.srt.pvn,
+  srt.romanov.pvn,
   reduction = "umap",
   features = c(
     "Oxt",
@@ -917,11 +1786,11 @@ FeaturePlot_scCustom(
 ```
 
 ```{r}
-#| label: plot-romanov2020-pvn-feature-crh-alk
+#| label: fig-romanov2020-pvn-feature-crh-alk
 #| fig-height: 3
 #| fig-width: 21
 FeaturePlot_scCustom(
-  rar2020.srt.pvn,
+  srt.romanov.pvn,
   reduction = "umap",
   features = c(
     "Fam150a",
@@ -937,11 +1806,11 @@ FeaturePlot_scCustom(
 ```
 
 ```{r}
-#| label: plot-romanov2020-pvn-feature-metabopioid
+#| label: fig-romanov2020-pvn-feature-metabopioid
 #| fig-width: 18
 #| fig-height: 21
 FeaturePlot_scCustom(
-  rar2020.srt.pvn,
+  srt.romanov.pvn,
   reduction = "umap",
   features = c(
     metabolic_signaling_genes,
@@ -956,7 +1825,7 @@ FeaturePlot_scCustom(
 ```{r}
 #| label: e-metabolic-representation-romanov2020-pvn
 sbs_mtx <-
-  rar2020.srt.pvn@assays$RNA@data %>%
+  srt.romanov.pvn@assays$RNA@data %>%
   as.data.frame() %>%
   t()
 
@@ -970,7 +1839,7 @@ sbs_mtx %<>% .[, filt_low_genes]
 min_filt_vector2 <-
   sbs_mtx %>%
   as_tibble() %>%
-  select(all_of(filt_low_genes)) %>%
+  dplyr::select(all_of(filt_low_genes)) %>%
   summarise(across(.fns = ~ quantile(.x, .005))) %>%
   as.list() %>%
   map(as.double) %>%
@@ -983,21 +1852,21 @@ content_sbs_mtx_romanov <-
   as_tibble() %>%
   mutate_all(as.numeric) %>%
   bind_cols(
-    rar2020.srt.pvn@meta.data |> select(wtree, age, stage)
+    srt.romanov.pvn@meta.data |> dplyr::select(wtree, age, stage)
   )
 ```
 
 #### All
 
 ```{r}
-#| label: upset-group-metabolic-romanov2020-pvn
+#| label: fig-upset-group-metabolic-romanov2020-pvn
 #| fig-height: 24
 #| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx_romanov |>
-      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
-      select(where(~ is.numeric(.x) && sum(.x) > 0))
+      dplyr::select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1015,15 +1884,15 @@ upset(
 #### Pubertal
 
 ```{r}
-#| label: upset-group-metabolic-romanov2020-pvn-Pubertal
+#| label: fig-upset-group-metabolic-romanov2020-pvn-Pubertal
 #| fig-height: 24
 #| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx_romanov |>
-      filter(stage == "Pubertal") |>
-      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
-      select(where(~ is.numeric(.x) && sum(.x) > 0))
+      dplyr::filter(stage == "Pubertal") |>
+      dplyr::select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1041,15 +1910,15 @@ upset(
 #### Adult
 
 ```{r}
-#| label: upset-group-metabolic-romanov2020-pvn-Adult
+#| label: fig-upset-group-metabolic-romanov2020-pvn-Adult
 #| fig-height: 18
 #| fig-width: 24
 upset(
   as.data.frame(
     content_sbs_mtx_romanov |>
-      filter(stage == "Adult") |>
-      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
-      select(where(~ is.numeric(.x) && sum(.x) > 0))
+      dplyr::filter(stage == "Adult") |>
+      dplyr::select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1076,22 +1945,22 @@ to_select <-
 
 content_sbs_mtx <-
   bind_rows(
-    content_sbs_mtx_kim |> select(all_of(to_select)),
-    content_sbs_mtx_romanov |> select(all_of(to_select))
+    content_sbs_mtx_kim |> dplyr::select(all_of(to_select)),
+    content_sbs_mtx_romanov |> dplyr::select(all_of(to_select))
   )
 ```
 
 #### All
 
 ```{r}
-#| label: upset-group-metabolic-pvn
+#| label: fig-upset-group-metabolic-pvn
 #| fig-height: 24
 #| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
-      select(where(~ is.numeric(.x) && sum(.x) > 0))
+      dplyr::select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1109,15 +1978,15 @@ upset(
 #### Pubertal
 
 ```{r}
-#| label: upset-group-metabolic-pvn-Pubertal-f2
+#| label: fig-upset-group-metabolic-pvn-Pubertal-f2
 #| fig-height: 24
 #| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
-      select(where(~ is.numeric(.x) && sum(.x) > 0))
+      dplyr::filter(stage == "Pubertal") |>
+      dplyr::select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1133,23 +2002,23 @@ upset(
 
 skim(as.data.frame(
   content_sbs_mtx |>
-    filter(stage == "Pubertal") |>
-    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt")))
+    dplyr::filter(stage == "Pubertal") |>
+    dplyr::select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt")))
 ))
 ```
 
 ```{r}
-#| label: upset-group-e-opioid-pvn-Pubertal-f3
+#| label: fig-upset-group-e-opioid-pvn-Pubertal-f3
 #| fig-height: 24
 #| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(any_of(c(
+      dplyr::filter(stage == "Pubertal") |>
+      dplyr::select(any_of(c(
         opioid_system_genes, "Crh", "Trh", "Oxt"
       ))) |>
-      select(where(~ is.numeric(.x) && sum(.x) > 0))
+      dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1165,27 +2034,27 @@ upset(
 
 skim(as.data.frame(
   content_sbs_mtx |>
-    filter(stage == "Pubertal") |>
-    select(any_of(c(
+    dplyr::filter(stage == "Pubertal") |>
+    dplyr::select(any_of(c(
       opioid_system_genes, "Crh", "Trh", "Oxt"
     ))) |>
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+    dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
 ))
 ```
 
 ```{r}
-#| label: upset-group-e-metabopioid-pvn-Pubertal-f4
+#| label: fig-upset-group-e-metabopioid-pvn-Pubertal-f4
 #| fig-height: 24
 #| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Pubertal") |>
-      select(any_of(c(
+      dplyr::filter(stage == "Pubertal") |>
+      dplyr::select(any_of(c(
         metabolic_signaling_genes,
         opioid_system_genes, "Crh", "Trh", "Oxt"
       ))) |>
-      select(where(~ is.numeric(.x) && sum(.x) > 0))
+      dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1201,27 +2070,27 @@ upset(
 
 skim(as.data.frame(
   content_sbs_mtx |>
-    filter(stage == "Pubertal") |>
-    select(any_of(c(
+    dplyr::filter(stage == "Pubertal") |>
+    dplyr::select(any_of(c(
       metabolic_signaling_genes,
       opioid_system_genes, "Crh", "Trh", "Oxt"
     ))) |>
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+    dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
 ))
 ```
 
 #### Adult
 
 ```{r}
-#| label: upset-group-metabolic-pvn-Adult-f2
+#| label: fig-upset-group-metabolic-pvn-Adult-f2
 #| fig-height: 24
 #| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
-      select(where(~ is.numeric(.x) && sum(.x) > 0))
+      dplyr::filter(stage == "Adult") |>
+      dplyr::select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+      dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1237,22 +2106,22 @@ upset(
 
 skim(as.data.frame(
   content_sbs_mtx |>
-    filter(stage == "Adult") |>
-    select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+    dplyr::filter(stage == "Adult") |>
+    dplyr::select(any_of(c(metabolic_signaling_genes, "Crh", "Trh", "Oxt"))) |>
+    dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
 ))
 ```
 
 ```{r}
-#| label: upset-group-e-opioid-pvn-Adult-f3
+#| label: fig-upset-group-e-opioid-pvn-Adult-f3
 #| fig-height: 24
 #| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(any_of(c(opioid_system_genes, "Crh", "Trh", "Oxt"))) |>
-      select(where(~ is.numeric(.x) && sum(.x) > 0))
+      dplyr::filter(stage == "Adult") |>
+      dplyr::select(any_of(c(opioid_system_genes, "Crh", "Trh", "Oxt"))) |>
+      dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1268,25 +2137,25 @@ upset(
 
 skim(as.data.frame(
   content_sbs_mtx |>
-    filter(stage == "Adult") |>
-    select(any_of(c(opioid_system_genes, "Crh", "Trh", "Oxt"))) |>
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+    dplyr::filter(stage == "Adult") |>
+    dplyr::select(any_of(c(opioid_system_genes, "Crh", "Trh", "Oxt"))) |>
+    dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
 ))
 ```
 
 ```{r}
-#| label: upset-group-e-metabopioid-pvn-Adult-f4
+#| label: fig-upset-group-e-metabopioid-pvn-Adult-f4
 #| fig-height: 24
 #| fig-width: 36
 upset(
   as.data.frame(
     content_sbs_mtx |>
-      filter(stage == "Adult") |>
-      select(any_of(c(
+      dplyr::filter(stage == "Adult") |>
+      dplyr::select(any_of(c(
         metabolic_signaling_genes,
         opioid_system_genes, "Crh", "Trh", "Oxt"
       ))) |>
-      select(where(~ is.numeric(.x) && sum(.x) > 0))
+      dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
   ),
   order.by = "freq",
   cutoff = 3,
@@ -1302,12 +2171,12 @@ upset(
 
 skim(as.data.frame(
   content_sbs_mtx |>
-    filter(stage == "Adult") |>
-    select(any_of(c(
+    dplyr::filter(stage == "Adult") |>
+    dplyr::select(any_of(c(
       metabolic_signaling_genes,
       opioid_system_genes, "Crh", "Trh", "Oxt"
     ))) |>
-    select(where(~ is.numeric(.x) && sum(.x) > 0))
+    dplyr::select(where(~ is.numeric(.x) && sum(.x) > 0))
 ))
 ```
 
